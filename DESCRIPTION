@@ -1,0 +1,36 @@
+Package: wnpmle
+Title: Weighted NPMLE for Recurrent Events with a Competing Terminal Event
+Version: 0.1.0
+Authors@R: 
+    person("Anna", "Bellach", email = "bellach@email.com",
+           role = c("aut", "cre"),
+           comment = c(ORCID = ""))
+Description: Implements the weighted nonparametric maximum likelihood estimator
+    (wNPMLE) for the marginal mean of recurrent events in the presence of a
+    competing terminal event, as described in Bellach and Kosorok (2026).
+    Two transformation models are provided: the Box-Cox transformation model
+    and the logarithmic transformation model. Both are estimated via automatic
+    differentiation using the Template Model Builder (TMB) framework.
+    Standard errors are computed via the sandwich variance estimator with
+    optional censoring correction.
+License: GPL (>= 3)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Depends:
+    R (>= 4.1.0)
+Imports:
+    TMB (>= 1.9.0),
+    survival,
+    methods
+LinkingTo:
+    TMB,
+    RcppEigen
+Suggests:
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+URL: https://github.com/bellach/wnpmle
+BugReports: https://github.com/bellach/wnpmle/issues

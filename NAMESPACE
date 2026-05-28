@@ -1,0 +1,5 @@
+useDynLib(wnpmle, .registration = TRUE)
+exportPattern("^[[:alpha:]]+")
+importFrom(TMB, MakeADFun)
+importFrom(survival, Surv, survfit)
+importFrom(methods, is)
