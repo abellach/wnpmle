@@ -23,9 +23,6 @@ Imports:
     TMB (>= 1.9.0),
     survival,
     methods
-LinkingTo:
-    TMB,
-    RcppEigen
 Suggests:
     testthat (>= 3.0.0),
     knitr,
