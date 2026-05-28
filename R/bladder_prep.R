@@ -32,40 +32,62 @@ bladder_prep <- function(max_time = NULL) {
     stop("Package 'survival' is required for bladder_prep().")
 
   blad <- survival::bladder1
+  blad <- blad[order(blad$id, blad$stop), ]
 
   # build long format
   ids <- unique(blad$id)
   out <- lapply(ids, function(i) {
-    sub <- blad[blad$id == i, ]
-    sub <- sub[order(sub$stop), ]
-
-    # recurrences (enum == 1 in bladder1)
-    rec <- sub[sub$enum > 0 & sub$event == 1, ]
-    ter <- sub[nrow(sub), ]   # last record
+    sub <- blad[blad$id == i, , drop = FALSE]
 
     rows <- list()
-    if (nrow(rec) > 0) {
-      for (j in seq_len(nrow(rec))) {
-        rows[[j]] <- data.frame(
+
+    # recurrent events: event == 1, not the last observation
+    for (j in seq_len(nrow(sub) - 1)) {
+      if (sub$event[j] == 1) {
+        rows[[length(rows) + 1]] <- data.frame(
           id     = i,
-          time   = rec$stop[j],
+          time   = sub$stop[j],
           status = 1L,
-          rx     = rec$rx[j],
-          size   = rec$size[j],
-          number = rec$number[j]
+          rx     = sub$rx[j],
+          size   = sub$size[j],
+          number = sub$number[j],
+          stringsAsFactors = FALSE
         )
       }
     }
-    # terminal row: status 2 if stopped due to removal/death, else 0
-    term_status <- if (ter$event == 2) 2L else 0L
+
+    # last row determines terminal/censored status
+    ter <- sub[nrow(sub), , drop = FALSE]
+    last_event <- ter$event[1]
+    # event == 1: last recurrence (treat as recurrent + censored terminal)
+    # event == 2: death/removal (terminal)
+    # event == 0: censored
+    if (last_event == 1L) {
+      # last event is a recurrence — add it as recurrent, then add censored row
+      rows[[length(rows) + 1]] <- data.frame(
+        id     = i,
+        time   = ter$stop[1],
+        status = 1L,
+        rx     = ter$rx[1],
+        size   = ter$size[1],
+        number = ter$number[1],
+        stringsAsFactors = FALSE
+      )
+      term_status <- 0L
+    } else {
+      term_status <- if (last_event == 2L) 2L else 0L
+    }
+
     rows[[length(rows) + 1]] <- data.frame(
       id     = i,
-      time   = ter$stop,
+      time   = ter$stop[1],
       status = term_status,
-      rx     = ter$rx,
-      size   = ter$size,
-      number = ter$number
+      rx     = ter$rx[1],
+      size   = ter$size[1],
+      number = ter$number[1],
+      stringsAsFactors = FALSE
     )
+
     do.call(rbind, rows)
   })
 
