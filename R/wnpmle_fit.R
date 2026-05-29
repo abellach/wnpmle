@@ -119,24 +119,31 @@ wnpmle_fit <- function(formula,
   }
 
   # ---- 1. Parse formula and data ----
-  mf      <- model.frame(formula, data)
-  Y       <- model.response(mf)
-  if (!inherits(Y, "Surv"))
+  # Extract time and status variable names from the Surv() call in the formula
+  resp <- as.character(formula[[2]])
+  # resp is like c("Surv", "time", "status")
+  if (resp[1] != "Surv" || length(resp) < 3)
     stop("Response must be a Surv object: Surv(time, status)")
 
-  time_col   <- Y[, "time"]
-  status_col <- as.integer(Y[, "status"])
-  cov_mat    <- model.matrix(formula, data)[, -1, drop = FALSE]
+  time_var   <- resp[2]
+  status_var <- resp[3]
 
-  # remove any rows with NA (e.g. from invalid status values)
-  keep <- !is.na(time_col) & !is.na(status_col)
-  time_col   <- time_col[keep]
-  status_col <- status_col[keep]
-  cov_mat    <- cov_mat[keep, , drop = FALSE]
+  if (!time_var %in% names(data))
+    stop("Time variable '", time_var, "' not found in data.")
+  if (!status_var %in% names(data))
+    stop("Status variable '", status_var, "' not found in data.")
+
+  time_col   <- data[[time_var]]
+  status_col <- as.integer(data[[status_var]])
+
+  # build covariate matrix from RHS of formula
+  rhs_formula <- formula
+  rhs_formula[[2]] <- NULL
+  cov_mat <- model.matrix(rhs_formula, data)[, -1, drop = FALSE]
 
   if (!id %in% names(data))
     stop("Column '", id, "' not found in data.")
-  id_vec <- as.integer(factor(data[[id]][keep]))
+  id_vec <- as.integer(factor(data[[id]]))
 
   if (!all(status_col %in% 0:2))
     stop("status must be 0 (censored), 1 (recurrent event), or 2 (terminal event).")
