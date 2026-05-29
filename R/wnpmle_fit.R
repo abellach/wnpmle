@@ -128,9 +128,15 @@ wnpmle_fit <- function(formula,
   status_col <- as.integer(Y[, "status"])
   cov_mat    <- model.matrix(formula, data)[, -1, drop = FALSE]
 
+  # remove any rows with NA (e.g. from invalid status values)
+  keep <- !is.na(time_col) & !is.na(status_col)
+  time_col   <- time_col[keep]
+  status_col <- status_col[keep]
+  cov_mat    <- cov_mat[keep, , drop = FALSE]
+
   if (!id %in% names(data))
     stop("Column '", id, "' not found in data.")
-  id_vec <- as.integer(factor(data[[id]]))
+  id_vec <- as.integer(factor(data[[id]][keep]))
 
   if (!all(status_col %in% 0:2))
     stop("status must be 0 (censored), 1 (recurrent event), or 2 (terminal event).")
