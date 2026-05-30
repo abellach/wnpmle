@@ -81,6 +81,113 @@ vcov.wnpmle <- function(object, ...) {
 }
 
 
+#' Log-likelihood for wnpmle objects
+#'
+#' @param object A \code{wnpmle} object.
+#' @param ... Ignored.
+#' @export
+logLik.wnpmle <- function(object, ...) {
+  val <- object$loglik
+  attr(val, "df") <- length(object$coefficients)
+  class(val) <- "logLik"
+  val
+}
+
+#' AIC for wnpmle objects
+#'
+#' @param object A \code{wnpmle} object.
+#' @param ... Ignored.
+#' @param k Penalty per parameter (default 2 for AIC).
+#' @export
+AIC.wnpmle <- function(object, ..., k = 2) {
+  p <- length(object$coefficients)
+  -2 * object$loglik + k * p
+}
+
+#' BIC for wnpmle objects
+#'
+#' @param object A \code{wnpmle} object.
+#' @param ... Ignored.
+#' @export
+BIC.wnpmle <- function(object, ...) {
+  p <- length(object$coefficients)
+  -2 * object$loglik + log(object$n) * p
+}
+
+
+#' Log-likelihood profile plot for the transformation parameter
+#'
+#' Fits the model over a grid of transformation parameter values (rho or r)
+#' and plots the profile log-likelihood. Useful for selecting the optimal
+#' transformation.
+#'
+#' @param formula A formula as passed to \code{\link{wnpmle_fit}}.
+#' @param data A data frame.
+#' @param id Name of the subject identifier column.
+#' @param model Transformation model: \code{"boxcox"} or \code{"log"}.
+#' @param rho_grid A numeric vector of rho/r values to evaluate
+#'   (default: \code{seq(0.5, 5, by = 0.5)} for Box-Cox,
+#'   \code{seq(0.5, 3, by = 0.5)} for log).
+#' @param se Variance estimation for each fit (default \code{"none"} for speed).
+#' @param plot Logical; if \code{TRUE} (default), plot the profile.
+#' @param ... Additional arguments passed to \code{\link{wnpmle_fit}}.
+#'
+#' @return A data frame with columns \code{rho} and \code{loglik}, invisibly.
+#'
+#' @examples
+#' \dontrun{
+#' bdata <- bladder_prep()
+#' bdata_clean <- bdata[, c("id", "time", "status", "treat", "num", "size")]
+#' plot_loglik(Surv(time, status) ~ treat + num + size,
+#'             data = bdata_clean, id = "id", model = "boxcox")
+#' }
+#' @export
+plot_loglik <- function(formula, data, id = "id",
+                        model     = c("boxcox", "log"),
+                        rho_grid  = NULL,
+                        se        = "none",
+                        plot      = TRUE,
+                        ...) {
+  model <- match.arg(model)
+
+  if (is.null(rho_grid)) {
+    rho_grid <- if (model == "boxcox") seq(0.5, 5, by = 0.5) else
+                                        seq(0.5, 3, by = 0.5)
+  }
+
+  logliks <- numeric(length(rho_grid))
+  cat("Fitting", length(rho_grid), "models...\n")
+
+  for (i in seq_along(rho_grid)) {
+    cat("  rho =", rho_grid[i], "\n")
+    fit_i <- tryCatch(
+      wnpmle_fit(formula, data = data, id = id,
+                 model = model, rho = rho_grid[i], se = se, ...),
+      error = function(e) NULL
+    )
+    logliks[i] <- if (!is.null(fit_i)) fit_i$loglik else NA_real_
+  }
+
+  result <- data.frame(rho = rho_grid, loglik = logliks)
+
+  if (plot) {
+    xlab <- if (model == "boxcox") expression(rho) else "r"
+    plot(rho_grid, logliks, type = "b", pch = 19,
+         xlab = xlab, ylab = "Log-likelihood",
+         main = paste("Profile log-likelihood —",
+                      ifelse(model == "boxcox", "Box-Cox", "Log"), "model"))
+    best <- rho_grid[which.max(logliks)]
+    abline(v = best, lty = 2, col = "red")
+    legend("topright",
+           legend = paste0("Best ", ifelse(model == "boxcox", "rho", "r"),
+                           " = ", best),
+           lty = 2, col = "red", bty = "n")
+  }
+
+  invisible(result)
+}
+
+
 #' Extract the estimated baseline mean function
 #'
 #' Returns a data frame with the estimated cumulative baseline mean function
