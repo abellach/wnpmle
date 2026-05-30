@@ -88,7 +88,8 @@ vcov.wnpmle <- function(object, ...) {
 #' @export
 logLik.wnpmle <- function(object, ...) {
   val <- object$loglik
-  attr(val, "df") <- length(object$coefficients)
+  attr(val, "df")   <- length(object$coefficients)
+  attr(val, "nobs") <- object$n
   class(val) <- "logLik"
   val
 }
@@ -117,74 +118,170 @@ BIC.wnpmle <- function(object, ...) {
 
 #' Log-likelihood profile plot for the transformation parameter
 #'
-#' Fits the model over a grid of transformation parameter values (rho or r)
-#' and plots the profile log-likelihood. Useful for selecting the optimal
-#' transformation.
+#' Fits the model over a fine grid of transformation parameter values and
+#' plots the profile log-likelihood for both the Box-Cox and logarithmic
+#' transformation models on a single plot. The log transformation parameter
+#' r is shown on the left (negative axis) and the Box-Cox parameter rho on
+#' the right (positive axis), meeting at zero where both models coincide.
 #'
 #' @param formula A formula as passed to \code{\link{wnpmle_fit}}.
 #' @param data A data frame.
 #' @param id Name of the subject identifier column.
-#' @param model Transformation model: \code{"boxcox"} or \code{"log"}.
-#' @param rho_grid A numeric vector of rho/r values to evaluate
-#'   (default: \code{seq(0.5, 5, by = 0.5)} for Box-Cox,
-#'   \code{seq(0.5, 3, by = 0.5)} for log).
-#' @param se Variance estimation for each fit (default \code{"none"} for speed).
-#' @param plot Logical; if \code{TRUE} (default), plot the profile.
+#' @param rho_grid A numeric vector of rho values for the Box-Cox model
+#'   (default: \code{seq(0.01, 1.2, by = 0.01)}).
+#' @param r_grid A numeric vector of r values for the log model
+#'   (default: \code{seq(0.01, 1.2, by = 0.01)}).
+#' @param mark_points Logical; if \code{TRUE} (default), marks reference
+#'   points at r=0, r=1, rho=0, rho=1.
+#' @param file Optional path to save the plot as a PDF (e.g.
+#'   \code{"loglik_profile.pdf"}). If \code{NULL} (default), plots to the
+#'   current device.
+#' @param verbose Logical; print progress (default \code{TRUE}).
 #' @param ... Additional arguments passed to \code{\link{wnpmle_fit}}.
 #'
-#' @return A data frame with columns \code{rho} and \code{loglik}, invisibly.
+#' @return A data frame with columns \code{model}, \code{param} and
+#'   \code{loglik}, invisibly.
 #'
 #' @examples
 #' \dontrun{
 #' bdata <- bladder_prep()
 #' bdata_clean <- bdata[, c("id", "time", "status", "treat", "num", "size")]
 #' plot_loglik(Surv(time, status) ~ treat + num + size,
-#'             data = bdata_clean, id = "id", model = "boxcox")
+#'             data = bdata_clean, id = "id")
 #' }
 #' @export
 plot_loglik <- function(formula, data, id = "id",
-                        model     = c("boxcox", "log"),
-                        rho_grid  = NULL,
-                        se        = "none",
-                        plot      = TRUE,
+                        rho_grid    = seq(0.01, 1.2, by = 0.01),
+                        r_grid      = seq(0.01, 1.2, by = 0.01),
+                        mark_points = TRUE,
+                        file        = NULL,
+                        verbose     = TRUE,
                         ...) {
-  model <- match.arg(model)
 
-  if (is.null(rho_grid)) {
-    rho_grid <- if (model == "boxcox") seq(0.5, 5, by = 0.5) else
-                                        seq(0.5, 3, by = 0.5)
-  }
+  # ---- Box-Cox grid ----
+  if (verbose) cat("Fitting Box-Cox grid (", length(rho_grid), "models)...\n")
+  ll_BC     <- numeric(length(rho_grid))
+  init_beta <- NULL
 
-  logliks <- numeric(length(rho_grid))
-  cat("Fitting", length(rho_grid), "models...\n")
-
-  for (i in seq_along(rho_grid)) {
-    cat("  rho =", rho_grid[i], "\n")
-    fit_i <- tryCatch(
+  for (k in seq_along(rho_grid)) {
+    fit_k <- tryCatch(
       wnpmle_fit(formula, data = data, id = id,
-                 model = model, rho = rho_grid[i], se = se, ...),
+                 model = "boxcox", rho = rho_grid[k],
+                 se = "none",
+                 init_beta = init_beta, ...),
       error = function(e) NULL
     )
-    logliks[i] <- if (!is.null(fit_i)) fit_i$loglik else NA_real_
+    if (!is.null(fit_k)) {
+      ll_BC[k]  <- fit_k$loglik
+      init_beta <- fit_k$coefficients  # warm start
+    } else {
+      ll_BC[k] <- NA_real_
+    }
+    if (verbose && k %% 20 == 0)
+      cat("  BC:", k, "/", length(rho_grid), "\n")
   }
 
-  result <- data.frame(rho = rho_grid, loglik = logliks)
+  # ---- Log grid ----
+  if (verbose) cat("Fitting log grid (", length(r_grid), "models)...\n")
+  ll_log    <- numeric(length(r_grid))
+  init_beta <- NULL
 
-  if (plot) {
-    xlab <- if (model == "boxcox") expression(rho) else "r"
-    plot(rho_grid, logliks, type = "b", pch = 19,
-         xlab = xlab, ylab = "Log-likelihood",
-         main = paste("Profile log-likelihood —",
-                      ifelse(model == "boxcox", "Box-Cox", "Log"), "model"))
-    best <- rho_grid[which.max(logliks)]
-    abline(v = best, lty = 2, col = "red")
-    legend("topright",
-           legend = paste0("Best ", ifelse(model == "boxcox", "rho", "r"),
-                           " = ", best),
-           lty = 2, col = "red", bty = "n")
+  for (k in seq_along(r_grid)) {
+    fit_k <- tryCatch(
+      wnpmle_fit(formula, data = data, id = id,
+                 model = "log", rho = r_grid[k],
+                 se = "none",
+                 init_beta = init_beta, ...),
+      error = function(e) NULL
+    )
+    if (!is.null(fit_k)) {
+      ll_log[k]  <- fit_k$loglik
+      init_beta  <- fit_k$coefficients
+    } else {
+      ll_log[k] <- NA_real_
+    }
+    if (verbose && k %% 20 == 0)
+      cat("  Log:", k, "/", length(r_grid), "\n")
   }
 
-  invisible(result)
+  # ---- shared reference value at param -> 0 ----
+  # Both models converge as rho->0 / r->0 to the same model
+  ref_BC  <- ll_BC[1]   # smallest rho
+  ref_log <- ll_log[1]  # smallest r
+
+  ll_BC.new  <- c(ref_log, ll_BC)
+  ll_log.new <- c(ref_BC,  ll_log)
+  rho_grid.new <- c(0, rho_grid)
+  r_grid.new   <- c(0, r_grid)
+
+  # ---- plot ----
+  if (!is.null(file)) pdf(file, width = 3.5, height = 3.5, useDingbats = FALSE)
+
+  ylim_all <- range(c(ll_log.new, ll_BC.new), finite = TRUE)
+  max_r    <- ceiling(max(r_grid.new)   / 0.4) * 0.4
+  max_rho  <- ceiling(max(rho_grid.new) / 0.4) * 0.4
+  xlim_all <- c(-max_r, max_rho)
+
+  par(mar = c(6, 5, 4, 2), mgp = c(1.25, 0.22, 0), tcl = -0.18)
+
+  plot(NA, xlim = xlim_all, ylim = ylim_all,
+       xlab = "", ylab = "Log-likelihood", axes = FALSE)
+  box()
+
+  lines(-r_grid.new,   ll_log.new, lwd = 2, lty = 2)
+  lines(rho_grid.new,  ll_BC.new,  lwd = 2)
+  abline(v = 0, lty = 3, col = "grey60")
+
+  ticks_left  <- round(seq(-max_r,  0,       by = 0.4), 2)
+  ticks_right <- round(seq(0,       max_rho, by = 0.4), 2)
+  axis(1, at     = c(ticks_left, ticks_right[-1]),
+          labels = c(abs(ticks_left), ticks_right[-1]))
+  axis(2)
+
+  mtext("Transformation parameter", side = 1, line = 3.5)
+  mtext("r",             side = 1, at = -0.7 * max_r,   line = 2.5)
+  mtext(expression(rho), side = 1, at =  0.7 * max_rho, line = 2.5)
+
+  if (mark_points) {
+    i_r1   <- which.min(abs(r_grid.new   - 1))
+    i_r0   <- which.min(abs(r_grid.new   - 0))
+    i_rho0 <- which.min(abs(rho_grid.new - 0))
+    i_rho1 <- which.min(abs(rho_grid.new - 1))
+
+    points(-r_grid.new[i_r1],    ll_log.new[i_r1],  pch = 16, cex = 1)
+    text(  -r_grid.new[i_r1] + 0.14, ll_log.new[i_r1],  labels = "r = 1")
+
+    points(-r_grid.new[i_r0],    ll_log.new[i_r0],  pch = 1,  cex = 1)
+    text(  -r_grid.new[i_r0],
+           ll_log.new[i_r0] - 0.03 * diff(ylim_all), labels = "r = 0")
+
+    points(rho_grid.new[i_rho0], ll_BC.new[i_rho0], pch = 16, cex = 1)
+    text(  rho_grid.new[i_rho0] + 0.14, ll_BC.new[i_rho0],
+           labels = expression(rho == 0))
+
+    points(rho_grid.new[i_rho1], ll_BC.new[i_rho1], pch = 1,  cex = 1)
+    text(  rho_grid.new[i_rho1] + 0.14, ll_BC.new[i_rho1],
+           labels = expression(rho == 1))
+  }
+
+  if (!is.null(file)) {
+    dev.off()
+    cat("Plot saved to", file, "\n")
+  }
+
+  # ---- report optima ----
+  best_rho <- rho_grid[which.max(ll_BC)]
+  best_r   <- r_grid[which.max(ll_log)]
+  cat("Optimal rho (Box-Cox):", best_rho,
+      "  loglik:", round(max(ll_BC, na.rm = TRUE), 4), "\n")
+  cat("Optimal r   (Log)    :", best_r,
+      "  loglik:", round(max(ll_log, na.rm = TRUE), 4), "\n")
+
+  invisible(data.frame(
+    model  = c(rep("log", length(r_grid)),   rep("boxcox", length(rho_grid))),
+    param  = c(r_grid,                        rho_grid),
+    loglik = c(ll_log,                        ll_BC)
+  ))
 }
 
 
