@@ -204,21 +204,7 @@ plot_loglik <- function(formula, data, id = "id",
       cat("  Log:", k, "/", length(r_grid), "\n")
   }
 
-  # ---- shared reference value at param -> 0 ----
-  # Both models converge as rho->0 / r->0 to the same model
-  ref_BC  <- ll_BC[1]   # smallest rho
-  ref_log <- ll_log[1]  # smallest r
-
   # match paper: use the value at param=1 of the OTHER model as starting point
-  i_r1_val   <- which.min(abs(r_grid   - 1))
-  i_rho1_val <- which.min(abs(rho_grid - 1))
-
-  ll_BC.new    <- c(ll_log[i_r1_val],   ll_BC)
-  ll_log.new   <- c(ll_BC[i_rho1_val],  ll_log)
-  rho_grid.new <- c(0, rho_grid)
-  r_grid.new   <- c(0, r_grid)
-
-  # exact logic from paper:
   # BC curve starts at loglik of log model at r=1
   # log curve starts at loglik of BC model at rho=1
   i_r1_val   <- which.min(abs(r_grid   - 1))
