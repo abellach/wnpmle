@@ -14,7 +14,8 @@ ends the process. Treating death as independent censoring leads to
 overestimation of the expected number of recurrences. This package implements
 the semiparametric estimator of Bellach and Kosorok (2026), which correctly
 accounts for the terminal event through inverse probability of censoring
-weights and a weighted likelihood.
+weights and a weighted likelihood. The Box-Cox transformation model with ρ=1 
+is equivalent to the Ghosh-Lin model.
 
 Two transformation models are provided:
 
@@ -81,7 +82,28 @@ summary(fit_bc)
 | 1      | Recurrent event            |
 | 2      | Terminal event (e.g. death)|
 
+
+## Citation
+If you use this package in your research, please cite:
+Bellach, A. and Kosorok, M.R. (2026). Weighted NPMLE for the marginal mean of
+recurrent events with a competing terminal event. *Journal of the American
+Statistical Association*, to appear.
+Preprint available at: https://arxiv.org/abs/2605.25934
+### BibTeX
+bibtex
+@article{bellach2026wnpmle,
+  title   = {Weighted {NPMLE} for the marginal mean of recurrent events 
+             with a competing terminal event},
+  author  = {Bellach, Anna and Kosorok, Michael R.},
+  journal = {Journal of the American Statistical Association},
+  year    = {2026},
+  note    = {to appear}
+}
+
 ## References
+
+Ghosh D. and Lin D.Y. (2002), Marginal regression models for recurrent and
+terminal events, Statistica Sinica 12, 663-688.
 
 Bellach, A. and Kosorok, M.R. (2026). Weighted NPMLE for the marginal mean of
 recurrent events with a competing terminal event. *Journal of the American
