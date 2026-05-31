@@ -209,17 +209,21 @@ plot_loglik <- function(formula, data, id = "id",
   ref_BC  <- ll_BC[1]   # smallest rho
   ref_log <- ll_log[1]  # smallest r
 
-  ll_BC.new  <- c(ref_log, ll_BC)
-  ll_log.new <- c(ref_BC,  ll_log)
+  # match paper: use the value at param=1 of the OTHER model as starting point
+  i_r1_val   <- which.min(abs(r_grid   - 1))
+  i_rho1_val <- which.min(abs(rho_grid - 1))
+
+  ll_BC.new    <- c(ll_log[i_r1_val],   ll_BC)
+  ll_log.new   <- c(ll_BC[i_rho1_val],  ll_log)
   rho_grid.new <- c(0, rho_grid)
   r_grid.new   <- c(0, r_grid)
 
   # ---- plot ----
   if (!is.null(file)) pdf(file, width = 3.5, height = 3.5, useDingbats = FALSE)
 
-  ylim_all <- range(c(ll_log.new, ll_BC.new), finite = TRUE)
-  max_r    <- ceiling(max(r_grid.new)   / 0.4) * 0.4
-  max_rho  <- ceiling(max(rho_grid.new) / 0.4) * 0.4
+  ylim_all <- range(c(ll_log, ll_BC), finite = TRUE)
+  max_r    <- ceiling(max(r_grid)   / 0.4) * 0.4
+  max_rho  <- ceiling(max(rho_grid) / 0.4) * 0.4
   xlim_all <- c(-max_r, max_rho)
 
   par(mar = c(6, 5, 4, 2), mgp = c(1.25, 0.22, 0), tcl = -0.18)
@@ -228,9 +232,9 @@ plot_loglik <- function(formula, data, id = "id",
        xlab = "", ylab = "Log-likelihood", axes = FALSE)
   box()
 
-  lines(-r_grid.new,   ll_log.new, lwd = 2, lty = 2)
-  lines(rho_grid.new,  ll_BC.new,  lwd = 2)
-  abline(v = 0, lty = 3, col = "grey60")
+  # each curve drawn independently — no connection at 0, no vertical lines
+  lines(-r_grid,  ll_log, lwd = 2, lty = 2)
+  lines(rho_grid, ll_BC,  lwd = 2)
 
   ticks_left  <- round(seq(-max_r,  0,       by = 0.4), 2)
   ticks_right <- round(seq(0,       max_rho, by = 0.4), 2)
@@ -239,29 +243,19 @@ plot_loglik <- function(formula, data, id = "id",
   axis(2)
 
   mtext("Transformation parameter", side = 1, line = 3.5)
-  mtext("r",             side = 1, at = -0.7 * max_r,   line = 2.5)
-  mtext(expression(rho), side = 1, at =  0.7 * max_rho, line = 2.5)
+  mtext("r",             side = 1, at = -0.7 * max_r,   line = 1.8)
+  mtext(expression(rho), side = 1, at =  0.7 * max_rho, line = 1.8)
 
   if (mark_points) {
-    i_r1   <- which.min(abs(r_grid.new   - 1))
-    i_r0   <- which.min(abs(r_grid.new   - 0))
-    i_rho0 <- which.min(abs(rho_grid.new - 0))
-    i_rho1 <- which.min(abs(rho_grid.new - 1))
+    i_r1   <- which.min(abs(r_grid   - 1))
+    i_rho1 <- which.min(abs(rho_grid - 1))
 
-    points(-r_grid.new[i_r1],    ll_log.new[i_r1],  pch = 16, cex = 1)
-    text(  -r_grid.new[i_r1] + 0.14, ll_log.new[i_r1],  labels = "r = 1")
+    points(-r_grid[i_r1],    ll_log[i_r1],  pch = 16, cex = 1)
+    text(-r_grid[i_r1] + 0.14, ll_log[i_r1], labels = "r = 1", adj = 0)
 
-    points(-r_grid.new[i_r0],    ll_log.new[i_r0],  pch = 1,  cex = 1)
-    text(  -r_grid.new[i_r0],
-           ll_log.new[i_r0] - 0.03 * diff(ylim_all), labels = "r = 0")
-
-    points(rho_grid.new[i_rho0], ll_BC.new[i_rho0], pch = 16, cex = 1)
-    text(  rho_grid.new[i_rho0] + 0.14, ll_BC.new[i_rho0],
-           labels = expression(rho == 0))
-
-    points(rho_grid.new[i_rho1], ll_BC.new[i_rho1], pch = 1,  cex = 1)
-    text(  rho_grid.new[i_rho1] + 0.14, ll_BC.new[i_rho1],
-           labels = expression(rho == 1))
+    points(rho_grid[i_rho1], ll_BC[i_rho1], pch = 1,  cex = 1)
+    text(rho_grid[i_rho1] + 0.14, ll_BC[i_rho1],
+         labels = expression(rho == 1), adj = 0)
   }
 
   if (!is.null(file)) {
