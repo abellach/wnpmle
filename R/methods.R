@@ -204,14 +204,13 @@ plot_loglik <- function(formula, data, id = "id",
       cat("  Log:", k, "/", length(r_grid), "\n")
   }
 
-  # match paper: use the value at param=1 of the OTHER model as starting point
-  # BC curve starts at loglik of log model at r=1
-  # log curve starts at loglik of BC model at rho=1
-  i_r1_val   <- which.min(abs(r_grid   - 1))
-  i_rho1_val <- which.min(abs(rho_grid - 1))
+  # ---- shared reference value at param -> 0 ----
+  # Both models converge as rho->0 / r->0 to the same model
+  ref_BC  <- ll_BC[1]   # smallest rho
+  ref_log <- ll_log[1]  # smallest r
 
-  ll_BC.new    <- c(ll_log[i_r1_val],  ll_BC)
-  ll_log.new   <- c(ll_BC[i_rho1_val], ll_log)
+  ll_BC.new  <- c(ref_log, ll_BC)
+  ll_log.new <- c(ref_BC,  ll_log)
   rho_grid.new <- c(0, rho_grid)
   r_grid.new   <- c(0, r_grid)
 
@@ -240,19 +239,29 @@ plot_loglik <- function(formula, data, id = "id",
   axis(2)
 
   mtext("Transformation parameter", side = 1, line = 3.5)
-  mtext("r",             side = 1, at = -0.7 * max_r,   line = 1.8)
-  mtext(expression(rho), side = 1, at =  0.7 * max_rho, line = 1.8)
+  mtext("r",             side = 1, at = -0.7 * max_r,   line = 2.5)
+  mtext(expression(rho), side = 1, at =  0.7 * max_rho, line = 2.5)
 
   if (mark_points) {
     i_r1   <- which.min(abs(r_grid.new   - 1))
+    i_r0   <- which.min(abs(r_grid.new   - 0))
+    i_rho0 <- which.min(abs(rho_grid.new - 0))
     i_rho1 <- which.min(abs(rho_grid.new - 1))
 
     points(-r_grid.new[i_r1],    ll_log.new[i_r1],  pch = 16, cex = 1)
-    text(-r_grid.new[i_r1] + 0.14, ll_log.new[i_r1], labels = "r = 1", adj = 0)
+    text(  -r_grid.new[i_r1] + 0.14, ll_log.new[i_r1],  labels = "r = 1")
+
+    points(-r_grid.new[i_r0],    ll_log.new[i_r0],  pch = 1,  cex = 1)
+    text(  -r_grid.new[i_r0],
+           ll_log.new[i_r0] - 0.03 * diff(ylim_all), labels = "r = 0")
+
+    points(rho_grid.new[i_rho0], ll_BC.new[i_rho0], pch = 16, cex = 1)
+    text(  rho_grid.new[i_rho0] + 0.14, ll_BC.new[i_rho0],
+           labels = expression(rho == 0))
 
     points(rho_grid.new[i_rho1], ll_BC.new[i_rho1], pch = 1,  cex = 1)
-    text(rho_grid.new[i_rho1] + 0.14, ll_BC.new[i_rho1],
-         labels = expression(rho == 1), adj = 0)
+    text(  rho_grid.new[i_rho1] + 0.14, ll_BC.new[i_rho1],
+           labels = expression(rho == 1))
   }
 
   if (!is.null(file)) {
