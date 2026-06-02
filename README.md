@@ -17,6 +17,10 @@ accounts for the terminal event through inverse probability of censoring
 weights and a weighted likelihood. The Box-Cox transformation model with ρ=1
 is equivalent to the Ghosh-Lin model.
 
+When no terminal events are present (status == 2 is absent), the package
+automatically reduces to the plain NPMLE, which is equivalent to the
+Zeng-Lin model (Zeng and Lin, 2006).
+
 Two transformation models are provided:
 
 - **Box-Cox**: G(x) = ((1 + x)^ρ − 1) / ρ
@@ -137,6 +141,9 @@ subdistribution of a competing risk. *JASA*, 114(525), 259–270.
 
 Ghosh D. and Lin D.Y. (2002). Marginal regression models for recurrent and
 terminal events. *Statistica Sinica* 12, 663–688.
+
+Zeng D. and Lin D.Y. (2006). Efficient estimation of semiparametric transformation
+models for counting processes. *Biometrika*, 93(3), 627–640.
 
 ## License
 

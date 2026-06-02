@@ -80,15 +80,16 @@
 #' Statistical Association}, 114(525), 259-270.
 #'
 #' @examples
-#' # Using bladder cancer data from the survival package
-#' data(bladder, package = "survival")
-#' bladder2 <- bladder_prep()
-#'
-#' # Fit log transformation model
-#' fit <- wnpmle_fit(Surv(time, status) ~ rx + size + number,
-#'                   data = bladder2, id = "id",
-#'                   model = "log", rho = 1)
-#' summary(fit)
+#'  \dontrun{
+#'   library(survival)
+#'   data("bladder2", package = "survival")
+#'   bladder2_prepped <- bladder_prep()
+#' 
+#'   fit <- wnpmle_fit(Surv(time, status) ~ treat + num + size,
+#'                     data = bladder2_prepped, id = "id",
+#'                     model = "log", rho = 1)
+#'   summary(fit)
+#' }
 #'
 #' @export
 wnpmle_fit <- function(formula,
@@ -121,8 +122,8 @@ wnpmle_fit <- function(formula,
   # ---- 1. Parse formula and data ----
   # Extract time and status variable names from the Surv() call in the formula
   resp <- as.character(formula[[2]])
-  # resp is like c("Surv", "time", "status")
-  if (resp[1] != "Surv" || length(resp) < 3)
+  # resp is like c("Surv", "time", "status") or c("survival::Surv", "time", "status")
+  if (!grepl("Surv", resp[1]) || length(resp) < 3)
     stop("Response must be a Surv object: Surv(time, status)")
 
   time_var   <- resp[2]
@@ -178,8 +179,8 @@ wnpmle_fit <- function(formula,
   zeng_lin <- (num2 == 0)   # no terminal events: reduce to Zeng-Lin (plain NPMLE)
   if (zeng_lin && se != "none") {
     message("No terminal events found: fitting Zeng-Lin model (plain NPMLE). ",
-            "Switching variance estimator to 'fisher'.")
-    se <- "fisher"
+            "Switching variance estimator to 'sandwich'.")
+    se <- "sandwich"
   }
 
   # ---- 3. Truncation time ----
@@ -237,7 +238,7 @@ wnpmle_fit <- function(formula,
     idx2  <- as.integer(findInterval(ind2,  ind1)) - 1L
     stopifnot(min(idx02) >= 0L, max(idx02) <= num1)
   }
-  stopifnot(min(idx2) >= -1L, max(idx2) <= num1 - 1L)
+  if (length(idx2) > 0) stopifnot(min(idx2) >= -1L, max(idx2) <= num1 - 1L)
 
   kmc1_tmb <- as.numeric(M1$kmc)
   kmc2_tmb <- as.numeric(M2$kmc)

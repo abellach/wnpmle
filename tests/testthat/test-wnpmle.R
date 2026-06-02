@@ -3,7 +3,7 @@ test_that("bladder_prep returns correct structure", {
   bdata <- bladder_prep()
 
   expect_s3_class(bdata, "data.frame")
-  expect_true(all(c("id", "time", "status", "rx", "size", "number") %in% names(bdata)))
+  expect_true(all(c("id", "time", "status") %in% names(bdata)))
   expect_true(all(bdata$status %in% 0:2))
   expect_true(sum(bdata$status == 1) > 0)
   expect_true(sum(bdata$status == 2) > 0)
@@ -15,7 +15,7 @@ test_that("wnpmle_fit returns wnpmle object with log model", {
 
   bdata <- bladder_prep()
   fit <- wnpmle_fit(
-    survival::Surv(time, status) ~ rx + size + number,
+    Surv(time, status) ~ treat + num + size,
     data  = bdata,
     id    = "id",
     model = "log",
@@ -24,10 +24,10 @@ test_that("wnpmle_fit returns wnpmle object with log model", {
   )
 
   expect_s3_class(fit, "wnpmle")
-  expect_named(fit$coefficients, c("rx", "size", "number"))
+  expect_named(fit$coefficients, c("treat", "num", "size"))
   expect_true(is.finite(fit$loglik))
   expect_equal(fit$convergence, "relative convergence (4)")
-  expect_equal(length(fit$Lambda), fit$n_events["recurrent"])
+  expect_equal(length(fit$Lambda), unname(fit$n_events["recurrent"]))
 })
 
 test_that("wnpmle_fit returns wnpmle object with boxcox model", {
@@ -36,7 +36,7 @@ test_that("wnpmle_fit returns wnpmle object with boxcox model", {
 
   bdata <- bladder_prep()
   fit <- wnpmle_fit(
-    survival::Surv(time, status) ~ rx + size + number,
+    Surv(time, status) ~ treat + num + size,
     data  = bdata,
     id    = "id",
     model = "boxcox",
@@ -54,7 +54,7 @@ test_that("predict.wnpmle works for baseline and newdata", {
 
   bdata <- bladder_prep()
   fit <- wnpmle_fit(
-    survival::Surv(time, status) ~ rx + size + number,
+    Surv(time, status) ~ treat + num + size,
     data  = bdata,
     id    = "id",
     model = "log",
@@ -66,7 +66,7 @@ test_that("predict.wnpmle works for baseline and newdata", {
   expect_s3_class(pred0, "data.frame")
   expect_true(all(pred0$mu >= 0))
 
-  newdat <- data.frame(rx = c(1, 2), size = c(1, 2), number = c(1, 3))
+  newdat <- data.frame(treat = c(1, 2), num = c(1, 3), size = c(1, 2))
   pred1 <- predict(fit, newdata = newdat)
   expect_equal(ncol(pred1), 3)  # time + mu_1 + mu_2
 })

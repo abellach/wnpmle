@@ -16,18 +16,18 @@ Description: Implements the weighted nonparametric maximum likelihood estimator
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Depends:
     R (>= 4.1.0)
 Imports:
     TMB (>= 1.9.0),
     survival,
-    methods
+    methods,
+    MASS,
+    graphics,
+    grDevices
 Suggests:
     testthat (>= 3.0.0),
-    knitr,
-    rmarkdown
 Config/testthat/edition: 3
-VignetteBuilder: knitr
 URL: https://github.com/bellach/wnpmle
 BugReports: https://github.com/bellach/wnpmle/issues

@@ -2,12 +2,11 @@
   tmb_dir <- system.file("tmb", package = pkgname)
 
   for (model in c("fn_BC_tmb", "fn_log_tmb")) {
-    cpp_file <- file.path(tmb_dir, paste0(model, ".cpp"))
-    dll_file  <- file.path(tmb_dir, paste0(model, .Platform$dynlib.ext))
+    dll_file <- file.path(tmb_dir, paste0(model, .Platform$dynlib.ext))
 
-    # compile only if DLL doesn't exist or is older than the source
-    if (!file.exists(dll_file) ||
-        file.mtime(dll_file) < file.mtime(cpp_file)) {
+    # only compile if DLL is missing (should be pre-compiled in package)
+    if (!file.exists(dll_file)) {
+      cpp_file <- file.path(tmb_dir, paste0(model, ".cpp"))
       TMB::compile(cpp_file, silent = TRUE)
     }
 

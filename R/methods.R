@@ -3,7 +3,7 @@
 #' @param ... Ignored.
 #' @export
 print.wnpmle <- function(x, ...) {
-  cat("\nWeighted NPMLE — Recurrent Events with Competing Terminal Event\n")
+  cat("\nWeighted NPMLE - Recurrent Events with Competing Terminal Event\n")
   cat("Type       :", x$type, "\n")
   cat("Model      :", toupper(x$model), "transformation (rho/r =", x$rho, ")\n")
   cat("Subjects   :", x$n, "\n")
