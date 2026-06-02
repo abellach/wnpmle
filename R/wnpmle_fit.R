@@ -175,18 +175,28 @@ wnpmle_fit <- function(formula,
   n02  <- num2 + numc
 
   if (num1 == 0) stop("No recurrent events (status == 1) found.")
-  if (num2 == 0) stop("No terminal events (status == 2) found.")
+  zeng_lin <- (num2 == 0)   # no terminal events: reduce to Zeng-Lin (plain NPMLE)
+  if (zeng_lin && se != "none") {
+    message("No terminal events found: fitting Zeng-Lin model (plain NPMLE). ",
+            "Switching variance estimator to 'fisher'.")
+    se <- "fisher"
+  }
 
   # ---- 3. Truncation time ----
   if (is.null(tau)) tau <- max(mydata$time)
 
   # ---- 4. KM censoring weights ----
-  risk      <- numi - cumsum(mydata$dimind[seq_len(n - 1)])
-  kmc_start <- (1 - 1 / (numi - 1))^(mydata$status[1] == 0)
-  mydata$kmc <- kmc_start *
-    c(1, cumprod((1 - 1 / risk)^mydata$status0[seq(2, n)]))
-  i_tau <- max(which(mydata$time <= tau), 0L)
-  if (i_tau > 0L) mydata$kmc[i_tau:n] <- mydata$kmc[i_tau]
+  # When num2==0 (Zeng-Lin): kmc=1 for all (weights are known, not estimated)
+  if (zeng_lin) {
+    mydata$kmc <- 1
+  } else {
+    risk      <- numi - cumsum(mydata$dimind[seq_len(n - 1)])
+    kmc_start <- (1 - 1 / (numi - 1))^(mydata$status[1] == 0)
+    mydata$kmc <- kmc_start *
+      c(1, cumprod((1 - 1 / risk)^mydata$status0[seq(2, n)]))
+    i_tau <- max(which(mydata$time <= tau), 0L)
+    if (i_tau > 0L) mydata$kmc[i_tau:n] <- mydata$kmc[i_tau]
+  }
 
   # ---- 5. Subsets ----
   M   <- mydata
@@ -314,7 +324,8 @@ wnpmle_fit <- function(formula,
         Lamc, Lam2, wnew, M1, M2, Mc
       )
 
-      if (se == "sandwich_corrected") {
+      if (se == "sandwich_corrected" && !zeng_lin) {
+        # psi correction only needed when KM weights are estimated (num2 > 0)
         psi_subj <- .censoring_correction(
           model, rho_val, numcov, num1, numi, n02, num2,
           cov2, beta, lambda_hat, Lambda, wnew,
@@ -355,6 +366,7 @@ wnpmle_fit <- function(formula,
       tau          = tau,
       n            = numi,
       n_events     = c(recurrent = num1, terminal = num2, censored = numc),
+      zeng_lin     = zeng_lin,
       t_grid       = c(tau4 = t4, tau2 = t2, tau = t1),
       convergence  = opt$message,
       call         = cl,
