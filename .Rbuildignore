@@ -2,3 +2,4 @@
 ^\.Rproj\.user$
 ^inst/tmb/.*\.dll$
 ^inst/tmb/.*\.o$
+^\.github$
