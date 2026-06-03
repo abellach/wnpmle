@@ -246,10 +246,28 @@ plot_loglik <- function(formula, data, id = "id",
           labels = c(abs(ticks_left), ticks_right[-1]))
   axis(2)
 
+  #mtext("Transformation parameter", side = 1, line = 3.5)
+  #mtext("r",             side = 1, at = -0.7 * max_r,   line = 1.8)
+  #mtext(expression(rho), side = 1, at =  0.7 * max_rho, line = 1.8)
+  # 1. Get the exact user limits of your X-axis
+  #x_limits <- par("usr")[1:2] 
+  #x_min <- x_limits[1]
+  #x_max <- x_limits[2]
+  # 2. Place text dynamically based on the actual plot width
+  #mtext("Logarithmic transformation", side = 3, at = x_min + 0.25 * (x_max - x_min), adj = 0.5, cex = 0.85)
+  #mtext("Box-Cox transformation",     side = 3, at = x_min + 0.75 * (x_max - x_min), adj = 0.5, cex = 0.85)
+  #mtext("Logarithmic transformation", side = 3, at = -0.5 * max_r,   adj = 0.5, cex = 0.85)
+  #mtext("Box-Cox transformation",     side = 3, at =  0.5 * max_rho, adj = 0.5, cex = 0.85)
+
   mtext("Transformation parameter", side = 1, line = 3.5)
   mtext("r",             side = 1, at = -0.7 * max_r,   line = 1.8)
   mtext(expression(rho), side = 1, at =  0.7 * max_rho, line = 1.8)
-
+  
+  # Added line = 1 to safely push the titles into the top margin space
+  mtext("Logarithmic transformation", side = 3, at = -0.5 * max_r,   adj = 0.5, cex = 0.85, line = 1)
+  mtext("Box-Cox transformation",     side = 3, at =  0.5 * max_rho, adj = 0.5, cex = 0.85, line = 1)
+  
+  
   if (mark_points) {
     i_r1   <- which.min(abs(r_grid.new   - 1))
     i_rho1 <- which.min(abs(rho_grid.new - 1))
