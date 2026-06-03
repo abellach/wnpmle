@@ -97,8 +97,8 @@ bladder_prep <- function(tau = 59) {
   # terminal/censored indicator
   mydata$dimind <- as.integer(mydata$status != 1)
 
-  # order by time
-  mydata <- mydata[order(mydata$time), ]
+  # order by id and time within id
+  mydata <- mydata[order(mydata$id, mydata$time), ]
   rownames(mydata) <- seq_len(nrow(mydata))
 
   # truncate times beyond tau to tau

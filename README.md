@@ -85,6 +85,13 @@ result <- plot_loglik(
   rho_grid = seq(0.01, 1.2, by = 0.01),
   r_grid   = seq(0.01, 1.2, by = 0.01)
 )
+
+# Table of log-likelihood values
+head(result)
+
+# Optimal transformation parameters
+result[result$model == "boxcox", ][which.max(result$loglik[result$model == "boxcox"]), ]
+result[result$model == "log",    ][which.max(result$loglik[result$model == "log"   ]), ]
 ```
 
 ## Status codes
