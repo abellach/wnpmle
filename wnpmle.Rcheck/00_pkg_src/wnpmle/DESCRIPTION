@@ -1,7 +1,8 @@
 Package: wnpmle
-Title: Weighted NPMLE for Recurrent Events with a Competing Terminal Event
+Title: Weighted NPMLE for Recurrent Events with a Competing Terminal
+        Event
 Version: 0.1.0
-Authors@R:
+Authors@R: 
     person("Anna", "Bellach", email = "abellach.biostat@gmail.com",
            role = c("aut", "cre"),
            comment = c(ORCID = ""))
@@ -19,20 +20,12 @@ License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
-Depends:
-    R (>= 4.1.0)
-Imports:
-    TMB (>= 1.9.0),
-    survival,
-    methods,
-    MASS,
-    graphics,
-    grDevices
-Suggests:
-    testthat (>= 3.0.0),
-    knitr,
-    rmarkdown
+Depends: R (>= 4.1.0)
+Imports: TMB (>= 1.9.0), survival, methods, MASS, graphics, grDevices
+Suggests: testthat (>= 3.0.0), knitr, rmarkdown
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 URL: https://github.com/bellach/wnpmle
 BugReports: https://github.com/bellach/wnpmle/issues
+NeedsCompilation: no
+Packaged: 2026-06-03 17:07:58 UTC; abell

@@ -3,3 +3,15 @@
 ^inst/tmb/.*\.dll$
 ^inst/tmb/.*\.o$
 ^\.github$
+^\.git$
+^\.gitignore$
+^\.github$
+^\.Rproj\.user$
+^.*\.Rproj$
+^\.\.Rcheck$
+^\.git$
+^\.gitignore$
+^\.github$
+^\.Rproj\.user$
+^.*\.Rproj$
+^\.\.Rcheck$

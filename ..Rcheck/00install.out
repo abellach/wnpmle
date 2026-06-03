@@ -1,0 +1,21 @@
+* installing *source* package 'wnpmle' ...
+** using staged installation
+** R
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded from temporary location
+using C++ compiler: 'G__~1.EXE (GCC) 13.3.0'
+make: Circular C:/Users/abell/OneDrive/Documents/Anna_paper3/R <- C:/Users/abell/OneDrive/Documents/Anna_paper3/R dependency dropped.
+make: *** No rule to make target 'package/..Rcheck/00LOCK-RPACKA~2/00new/wnpmle/tmb/fn_BC_tmb.o', needed by 'C:/Users/abell/OneDrive/Documents/Anna_paper3/R'.  Stop.
+Error: package or namespace load failed for 'wnpmle':
+ .onLoad failed in loadNamespace() for 'wnpmle', details:
+  call: TMB::compile(cpp_file, silent = TRUE)
+  error: Compilation failed
+Error: loading failed
+Execution halted
+ERROR: loading failed
+* removing 'C:/Users/abell/OneDrive/DOCUME~1/ANNA_P~3/RPACKA~2/RCHECK~1/wnpmle'
