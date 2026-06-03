@@ -34,5 +34,5 @@ Suggests:
     rmarkdown
 Config/testthat/edition: 3
 VignetteBuilder: knitr
-URL: https://github.com/bellach/wnpmle
-BugReports: https://github.com/bellach/wnpmle/issues
+URL: https://github.com/abellach/wnpmle
+BugReports: https://github.com/abellach/wnpmle/issues
