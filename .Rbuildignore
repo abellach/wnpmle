@@ -15,3 +15,7 @@
 ^\.Rproj\.user$
 ^.*\.Rproj$
 ^\.\.Rcheck$
+^wnpmle\.md$
+^figure$
+^wnpmle_.*\.tar\.gz$
+^wnpmle\.Rcheck$
