@@ -117,10 +117,9 @@ subject with columns:
 If you use this package in your research, please cite:
 
 Bellach, A. and Kosorok, M.R. (2026). Weighted NPMLE for the marginal mean of
-recurrent events with a competing terminal event. *Journal of the American
-Statistical Association*, to appear.
+recurrent events with a competing terminal event. 
 
-Preprint available at: https://arxiv.org/abs/2605.25934
+https://arxiv.org/abs/2605.25934
 
 ### BibTeX
 
@@ -129,9 +128,8 @@ Preprint available at: https://arxiv.org/abs/2605.25934
   title   = {Weighted {NPMLE} for the marginal mean of recurrent events
              with a competing terminal event},
   author  = {Bellach, Anna and Kosorok, Michael R.},
-  journal = {Journal of the American Statistical Association},
-  year    = {2026},
-  note    = {to appear}
+  year   = {2026},
+  url    = {https://arxiv.org/abs/2605.25934}
 }
 ```
 
@@ -149,3 +147,4 @@ transformation models for counting processes. *Biometrika*, 93(3), 627-640.
 ## License
 
 GPL (>= 3)
+
