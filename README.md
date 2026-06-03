@@ -76,6 +76,16 @@ baseline(fit_log)
 AIC(fit_log)
 BIC(fit_log)
 
+# --- Prediction: marginal mean at new covariate values ---
+newdat <- data.frame(treat = c(0, 1), num = c(1, 1), size = c(1, 1))
+pred <- predict(fit_bc, newdata = newdat, times = seq(1, 50, by = 1))
+plot(pred$time, pred$mu_1, type = "s", lwd = 2,
+     xlab = "Time (months)", ylab = "Marginal mean number of recurrences",
+     ylim = range(pred[, -1]))
+lines(pred$time, pred$mu_2, lwd = 2, lty = 2, col = "firebrick")
+legend("topleft", legend = c("Placebo", "Thiotepa"),
+       lty = c(1, 2), col = c("black", "firebrick"), bty = "n")
+
 # --- Profile log-likelihood for transformation parameter ---
 result <- plot_loglik(
   Surv(time, status) ~ treat + num + size,
