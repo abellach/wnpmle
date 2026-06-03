@@ -135,7 +135,7 @@ https://arxiv.org/abs/2605.25934
 
 ## References
 
-Bellach, A., Kosorok, M.R., Fine, J.P. (2019). Weighted NPMLE for the
+Bellach, A., Kosorok, M.R., Rüschendorf, L., and Fine, J.P. (2019). Weighted NPMLE for the
 subdistribution of a competing risk. *JASA*, 114(525), 259-270.
 
 Ghosh, D. and Lin, D.Y. (2002). Marginal regression models for recurrent and
