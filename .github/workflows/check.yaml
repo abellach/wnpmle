@@ -12,9 +12,11 @@ jobs:
         run: sudo apt-get install -y libglpk-dev libcurl4-openssl-dev
       - name: Install R dependencies
         run: |
-          install.packages(c('remotes', 'rcmdcheck'))
+          install.packages(c('remotes', 'rcmdcheck'), repos='https://cloud.r-project.org')
           remotes::install_deps(dependencies = TRUE)
         shell: Rscript {0}
       - name: Check
-        run: rcmdcheck::rcmdcheck(args = c('--no-manual'), error_on = 'error')
+        run: |
+          library(rcmdcheck)
+          rcmdcheck(args = c('--no-manual'), error_on = 'error')
         shell: Rscript {0}
