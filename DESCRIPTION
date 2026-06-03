@@ -7,14 +7,15 @@ Authors@R:
            comment = c(ORCID = ""))
 Author: Anna Bellach [aut, cre]
 Maintainer: Anna Bellach <abellach.biostat@gmail.com>
-Description: Implements the weighted nonparametric maximum likelihood estimator
-    (wNPMLE) for the marginal mean of recurrent events in the presence of a
-    competing terminal event, as described in Bellach and Kosorok (2026).
-    Two transformation models are provided: the Box-Cox transformation model
-    and the logarithmic transformation model. Both are estimated via automatic
-    differentiation using the Template Model Builder (TMB) framework.
-    Standard errors are computed via the sandwich variance estimator with
-    optional censoring correction.
+Description: Provides regression modeling and prediction for the marginal
+    mean of recurrent events in the presence of a competing terminal event
+    based on the weighted nonparametric maximum likelihood estimator
+    (wNPMLE) of Bellach and Kosorok (2026). Two large classes of
+    transformation models are included: the Box-Cox transformation models
+    and the logarithmic transformation models. Parameter estimates are
+    derived via automatic differentiation using the Template Model Builder
+    (TMB) framework. Standard errors are computed via a sandwich variance
+    estimator with correction for the estimated weights.
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
