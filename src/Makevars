@@ -1,4 +1,5 @@
 TMB_INCLUDE = $(shell "${R_HOME}/bin/Rscript" -e "cat(system.file('include', package='TMB'))")
 EIGEN_INCLUDE = $(shell "${R_HOME}/bin/Rscript" -e "cat(system.file('include', package='RcppEigen'))")
-PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS) -I$(TMB_INCLUDE) -I$(EIGEN_INCLUDE)
+PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS) -I$(TMB_INCLUDE) -I$(EIGEN_INCLUDE) -DTMB_HAVE_ATOMIC
 PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
+OBJECTS = fn_BC_tmb.o fn_log_tmb.o
