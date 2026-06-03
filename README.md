@@ -43,24 +43,12 @@ and [Rtools](https://cran.r-project.org/bin/windows/Rtools/) (Windows only).
 
 ```r
 library(wnpmle)
-library(survival)
 
 # Prepare bladder cancer data
 bdata       <- bladder_prep()
 bdata_clean <- bdata[, c("id", "time", "status", "treat", "num", "size")]
 
-# Fit the logarithmic transformation model (Ghosh-Lin when rho = 1)
-fit <- wnpmle_fit(
-  Surv(time, status) ~ treat + num + size,
-  data  = bdata_clean,
-  id    = "id",
-  model = "log",
-  rho   = 1,
-  se    = "sandwich"
-)
-summary(fit)
-
-# Fit the Box-Cox transformation model
+# Fit the Ghosh-Lin model (Box-Cox with rho = 1)
 fit_bc <- wnpmle_fit(
   Surv(time, status) ~ treat + num + size,
   data  = bdata_clean,
@@ -70,27 +58,41 @@ fit_bc <- wnpmle_fit(
   se    = "sandwich"
 )
 summary(fit_bc)
+plot(fit_bc)
+baseline(fit_bc)
+AIC(fit_bc)
+BIC(fit_bc)
 
-# Plot cumulative baseline mean with confidence bands
-plot(fit)
-
-# Extract baseline table
-bl <- baseline(fit)
-head(bl)
-
-# Model selection
-AIC(fit)
-BIC(fit)
-logLik(fit)
+# Fit the logarithmic transformation model (proportional odds when r = 1)
+fit_log <- wnpmle_fit(
+  Surv(time, status) ~ treat + num + size,
+  data  = bdata_clean,
+  id    = "id",
+  model = "log",
+  rho   = 1,
+  se    = "sandwich"
+)
+summary(fit_log)
+plot(fit_log)
+baseline(fit_log)
+AIC(fit_log)
+BIC(fit_log)
 
 # Log-likelihood profile plot for transformation parameter
-plot_loglik(
+# tau = 59 is the study endpoint (in months)
+result <- plot_loglik(
   Surv(time, status) ~ treat + num + size,
   data     = bdata_clean,
   id       = "id",
+  tau      = 59,
   rho_grid = seq(0.01, 1.2, by = 0.01),
   r_grid   = seq(0.01, 1.2, by = 0.01)
 )
+
+# Table of log-likelihood values
+head(result)
+
+# Optimal transformation parameters (printed automatically)
 ```
 
 ## Status codes

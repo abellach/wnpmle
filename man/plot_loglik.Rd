@@ -10,6 +10,7 @@ plot_loglik(
   id = "id",
   rho_grid = seq(0.01, 1.2, by = 0.01),
   r_grid = seq(0.01, 1.2, by = 0.01),
+  tau = NULL,
   mark_points = TRUE,
   file = NULL,
   verbose = TRUE,
@@ -29,9 +30,12 @@ plot_loglik(
 \item{r_grid}{A numeric vector of r values for the log model
 (default: \code{seq(0.01, 1.2, by = 0.01)}).}
 
+\item{tau}{Optional truncation time. If \code{NULL} (default), uses the
+maximum observed time in the data.}
+
 \item{mark_points}{Logical; if \code{TRUE} (default), marks reference
-points at r=1 (filled circle) and rho=1 (open circle), corresponding
-to the Ghosh-Lin and proportional odds models respectively.}
+points at rho=1 (filled circle, Ghosh-Lin) and r=1 (open circle,
+proportional odds model).}
 
 \item{file}{Optional path to save the plot as a PDF (e.g.
 \code{"loglik_profile.pdf"}). If \code{NULL} (default), plots to the
