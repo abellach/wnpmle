@@ -10,15 +10,15 @@ terminal event (e.g. death) is present.
 
 In many clinical studies, subjects experience repeated events (e.g., COPD exacerbations, bladder tumor recurrences). Additional challenges arise when subjects are also exposed to a competing terminal event. Modeling the terminal event as independent censoring leads to overestimation of the expected number of recurrences. 
 
-This package implements the semiparametric estimator of [Bellach and Kosorok (2026)]([[arXiv:2605.25934](https://arxiv.org)] [[Direct PDF](https://arxiv.org)], which correctly accounts for the terminal event through weighted nonparametric maximum likelihood estimation (WNPMLE).
+This package implements the semiparametric estimator of [Bellach and Kosorok (2026)], which correctly accounts for the terminal event through weighted nonparametric maximum likelihood estimation (WNPMLE).
 
 Two transformation models are provided:
 
-- **Box-Cox**: G(x) = ((1 + x)^rho - 1) / rho — reduces to the **Ghosh-Lin model** [JSTOR: 24307044](https://jstor.org) when rho = 1
+- **Box-Cox**: G(x) = ((1 + x)^rho - 1) / rho — reduces to the **Ghosh-Lin model** when rho = 1
 - **Logarithmic**: G(x) = log(1 + r*x) / r — reduces to the **proportional odds model** when r = 1
 
 When no terminal events are present, the package automatically reduces to the
-plain NPMLE, equivalent to the  **Zeng-Lin model** [DOI: 10.1093/biomet/93.3.627](https://doi.org).
+plain NPMLE, equivalent to the  **Zeng-Lin model**.
 
 Both models are estimated via automatic differentiation (TMB). Standard errors
 are available via the sandwich estimator with optional censoring correction.
@@ -142,13 +142,13 @@ https://arxiv.org/abs/2605.25934
 ## References
 
 Bellach A., Kosorok M.R., Rüschendorf L., and Fine J.P. (2019). Weighted NPMLE for the
-subdistribution of a competing risk. *JASA*, 114(525), 259-270. [DOI: 10.1080/01621459.2017.1401540](https://doi.org)
+subdistribution of a competing risk. *JASA*, 114(525), 259-270. 
 
 Ghosh, D. and Lin, D.Y. (2002). Marginal regression models for recurrent and
-terminal events. *Statistica Sinica*, 12, 663-688. [JSTOR: 24307044](https://jstor.org)
+terminal events. *Statistica Sinica*, 12, 663-688. 
 
 Zeng, D. and Lin, D.Y. (2006). Efficient estimation of semiparametric
-transformation models for counting processes. *Biometrika*, 93(3), 627-640. [DOI: 10.1093/biomet/93.3.627](https://doi.org)
+transformation models for counting processes. *Biometrika*, 93(3), 627-640. 
 
 ## License
 
