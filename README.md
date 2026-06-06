@@ -140,10 +140,10 @@ recurrent events with a competing terminal event. [[arXiv:2605.25934](https://ar
 ## References
 
 Bellach A., Kosorok M.R., Rüschendorf L., and Fine J.P. (2019). Weighted NPMLE for the
-subdistribution of a competing risk. *JASA*, 114(525), 259-270. 
+subdistribution of a competing risk. *JASA*, 114(525), 259-270. [[Taylor & Francis Direct](https://www.tandfonline.com/doi/abs/10.1080/01621459.2017.1401540)]
 
 Ghosh, D. and Lin, D.Y. (2002). Marginal regression models for recurrent and
-terminal events. *Statistica Sinica*, 12, 663-688. 
+terminal events. *Statistica Sinica*, 12, 663-688. [[Statistica Sinica Direct](https://www3.stat.sinica.edu.tw/statistica/j12n3/j12n31/j12n31.htm)]
 
 Zeng, D. and Lin, D.Y. (2006). Efficient estimation of semiparametric
 transformation models for counting processes. *Biometrika*, 93(3), 627-640. [[Oxford Academic Direct](https://academic.oup.com/biomet/article/93/3/627/380709)]
