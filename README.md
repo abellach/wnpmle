@@ -8,13 +8,9 @@ terminal event (e.g. death) is present.
 
 ## Background
 
-In many clinical studies, subjects experience repeated events (e.g. COPD
-exacerbations, bladder tumour recurrences) until a terminal event permanently
-ends the process. Treating death as independent censoring leads to
-overestimation of the expected number of recurrences. This package implements
-the semiparametric estimator of Bellach and Kosorok (2026), which correctly
-accounts for the terminal event through inverse probability of censoring
-weights and a weighted likelihood.
+In many clinical studies, subjects experience repeated events (e.g., COPD exacerbations, bladder tumor recurrences). Additional challenges arise when subjects are also exposed to a competing terminal event. Modeling the terminal event as independent censoring leads to overestimation of the expected number of recurrences. 
+
+This package implements the semiparametric estimator of [Bellach and Kosorok (2026)](https://arxiv.org), which correctly accounts for the terminal event through weighted nonparametric maximum likelihood estimation (WNPMLE).
 
 Two transformation models are provided:
 
