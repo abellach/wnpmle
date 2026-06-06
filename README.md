@@ -14,11 +14,11 @@ This package implements the semiparametric estimator of [Bellach and Kosorok (20
 
 Two transformation models are provided:
 
-- **Box-Cox**: G(x) = ((1 + x)^rho - 1) / rho — reduces to the **Ghosh-Lin model** when rho = 1
+- **Box-Cox**: G(x) = ((1 + x)^rho - 1) / rho — reduces to the **Ghosh-Lin model** [JSTOR: 24307044](https://jstor.org) when rho = 1
 - **Logarithmic**: G(x) = log(1 + r*x) / r — reduces to the **proportional odds model** when r = 1
 
 When no terminal events are present, the package automatically reduces to the
-plain NPMLE, equivalent to the **Zeng-Lin model** (Zeng and Lin, 2006).
+plain NPMLE, equivalent to the  **Zeng-Lin model** [DOI: 10.1093/biomet/93.3.627](https://doi.org).
 
 Both models are estimated via automatic differentiation (TMB). Standard errors
 are available via the sandwich estimator with optional censoring correction.
@@ -123,7 +123,7 @@ subject with columns:
 If you use this package in your research, please cite:
 
 Bellach, A. and Kosorok, M.R. (2026). Weighted NPMLE for the marginal mean of
-recurrent events with a competing terminal event. 
+recurrent events with a competing terminal event. [[arXiv:2605.25934](https://arxiv.org/abs/2605.25934)]
 
 https://arxiv.org/abs/2605.25934
 
@@ -141,14 +141,14 @@ https://arxiv.org/abs/2605.25934
 
 ## References
 
-Bellach A., Kosorok M.R., Rüschendorf L. and Fine J.P. (2019). Weighted NPMLE for the
-subdistribution of a competing risk. *JASA*, 114(525), 259-270.
+Bellach A., Kosorok M.R., Rüschendorf L., and Fine J.P. (2019). Weighted NPMLE for the
+subdistribution of a competing risk. *JASA*, 114(525), 259-270. [DOI: 10.1080/01621459.2017.1401540](https://doi.org)
 
 Ghosh, D. and Lin, D.Y. (2002). Marginal regression models for recurrent and
-terminal events. *Statistica Sinica*, 12, 663-688.
+terminal events. *Statistica Sinica*, 12, 663-688. [JSTOR: 24307044](https://jstor.org)
 
 Zeng, D. and Lin, D.Y. (2006). Efficient estimation of semiparametric
-transformation models for counting processes. *Biometrika*, 93(3), 627-640.
+transformation models for counting processes. *Biometrika*, 93(3), 627-640. [DOI: 10.1093/biomet/93.3.627](https://doi.org)
 
 ## License
 
