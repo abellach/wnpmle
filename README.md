@@ -54,6 +54,12 @@ fit_bc <- wnpmle_fit(
 summary(fit_bc)
 plot(fit_bc)
 baseline(fit_bc)
+bl_bc <- baseline(fit_bc)
+plot(bl_bc$time, bl_bc$Lambda, type = "s", lwd = 2,
+     xlab = "Time (months)", ylab = expression(hat(Lambda)(t)),
+     main = "Cumulative baseline mean (Ghosh-Lin)")
+lines(bl_bc$time, bl_bc$lower, lty = 2, col = "grey50")
+lines(bl_bc$time, bl_bc$upper, lty = 2, col = "grey50")
 AIC(fit_bc)
 BIC(fit_bc)
 
@@ -69,6 +75,12 @@ fit_log <- wnpmle_fit(
 summary(fit_log)
 plot(fit_log)
 baseline(fit_log)
+bl_log <- baseline(fit_log)
+plot(bl_log$time, bl_log$Lambda, type = "s", lwd = 2,
+     xlab = "Time (months)", ylab = expression(hat(Lambda)(t)),
+     main = "Cumulative baseline mean (proportional odds)")
+lines(bl_log$time, bl_log$lower, lty = 2, col = "grey50")
+lines(bl_log$time, bl_log$upper, lty = 2, col = "grey50")
 AIC(fit_log)
 BIC(fit_log)
 
