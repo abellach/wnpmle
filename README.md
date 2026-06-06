@@ -146,7 +146,7 @@ Ghosh, D. and Lin, D.Y. (2002). Marginal regression models for recurrent and
 terminal events. *Statistica Sinica*, 12, 663-688. 
 
 Zeng, D. and Lin, D.Y. (2006). Efficient estimation of semiparametric
-transformation models for counting processes. *Biometrika*, 93(3), 627-640. 
+transformation models for counting processes. *Biometrika*, 93(3), 627-640. [[Oxford Academic Direct](https://academic.oup.com/biomet/article/93/3/627/380709)]
 
 ## License
 
