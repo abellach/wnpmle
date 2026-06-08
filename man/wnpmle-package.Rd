@@ -23,13 +23,13 @@ of recurrent events with a competing terminal event. \emph{JASA}, to appear.
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/bellach/wnpmle}
-  \item Report bugs at \url{https://github.com/bellach/wnpmle/issues}
+  \item \url{https://github.com/abellach/wnpmle}
+  \item Report bugs at \url{https://github.com/abellach/wnpmle/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: Anna Bellach \email{bellach@email.com}
+\strong{Maintainer}: Anna Bellach \email{abellach.biostat@gmail.com}
 
 }
 \keyword{internal}

@@ -5,7 +5,8 @@
 print.wnpmle <- function(x, ...) {
   cat("\nWeighted NPMLE - Recurrent Events with Competing Terminal Event\n")
   cat("Type       :", x$type, "\n")
-  cat("Model      :", toupper(x$model), "transformation (rho/r =", x$rho, ")\n")
+  param_name <- if (x$model == "boxcox") "rho" else "r"
+  cat("Model      :", toupper(x$model), "transformation (", param_name, "=", x$rho, ")\n")
   cat("Subjects   :", x$n, "\n")
   cat("Events     : recurrent =", x$n_events["recurrent"],
       "  terminal =", x$n_events["terminal"],
@@ -131,9 +132,11 @@ BIC.wnpmle <- function(object, ...) {
 #'   (default: \code{seq(0.01, 1.2, by = 0.01)}).
 #' @param r_grid A numeric vector of r values for the log model
 #'   (default: \code{seq(0.01, 1.2, by = 0.01)}).
+#' @param tau Optional truncation time. If \code{NULL} (default), uses the
+#'   maximum observed time in the data.
 #' @param mark_points Logical; if \code{TRUE} (default), marks reference
-#'   points at r=1 (filled circle) and rho=1 (open circle), corresponding
-#'   to the Ghosh-Lin and proportional odds models respectively.
+#'   points at rho=1 (filled circle, Ghosh-Lin) and r=1 (open circle,
+#'   proportional odds model).
 #' @param file Optional path to save the plot as a PDF (e.g.
 #'   \code{"loglik_profile.pdf"}). If \code{NULL} (default), plots to the
 #'   current device.
@@ -154,6 +157,7 @@ BIC.wnpmle <- function(object, ...) {
 plot_loglik <- function(formula, data, id = "id",
                         rho_grid    = seq(0.01, 1.2, by = 0.01),
                         r_grid      = seq(0.01, 1.2, by = 0.01),
+                        tau         = NULL,
                         mark_points = TRUE,
                         file        = NULL,
                         verbose     = TRUE,
@@ -168,6 +172,7 @@ plot_loglik <- function(formula, data, id = "id",
     fit_k <- tryCatch(
       wnpmle_fit(formula, data = data, id = id,
                  model = "boxcox", rho = rho_grid[k],
+                 tau = tau,
                  se = "none",
                  init_beta = init_beta, ...),
       error = function(e) NULL
@@ -191,6 +196,7 @@ plot_loglik <- function(formula, data, id = "id",
     fit_k <- tryCatch(
       wnpmle_fit(formula, data = data, id = id,
                  model = "log", rho = r_grid[k],
+                 tau = tau,
                  se = "none",
                  init_beta = init_beta, ...),
       error = function(e) NULL
@@ -240,10 +246,28 @@ plot_loglik <- function(formula, data, id = "id",
           labels = c(abs(ticks_left), ticks_right[-1]))
   axis(2)
 
+  #mtext("Transformation parameter", side = 1, line = 3.5)
+  #mtext("r",             side = 1, at = -0.7 * max_r,   line = 1.8)
+  #mtext(expression(rho), side = 1, at =  0.7 * max_rho, line = 1.8)
+  # 1. Get the exact user limits of your X-axis
+  #x_limits <- par("usr")[1:2] 
+  #x_min <- x_limits[1]
+  #x_max <- x_limits[2]
+  # 2. Place text dynamically based on the actual plot width
+  #mtext("Logarithmic transformation", side = 3, at = x_min + 0.25 * (x_max - x_min), adj = 0.5, cex = 0.85)
+  #mtext("Box-Cox transformation",     side = 3, at = x_min + 0.75 * (x_max - x_min), adj = 0.5, cex = 0.85)
+  #mtext("Logarithmic transformation", side = 3, at = -0.5 * max_r,   adj = 0.5, cex = 0.85)
+  #mtext("Box-Cox transformation",     side = 3, at =  0.5 * max_rho, adj = 0.5, cex = 0.85)
+
   mtext("Transformation parameter", side = 1, line = 3.5)
   mtext("r",             side = 1, at = -0.7 * max_r,   line = 1.8)
   mtext(expression(rho), side = 1, at =  0.7 * max_rho, line = 1.8)
-
+  
+  # Added line = 1 to safely push the titles into the top margin space
+  mtext("Logarithmic transformation", side = 3, at = -0.5 * max_r,   adj = 0.5, cex = 0.85, line = 1)
+  mtext("Box-Cox transformation",     side = 3, at =  0.5 * max_rho, adj = 0.5, cex = 0.85, line = 1)
+  
+  
   if (mark_points) {
     i_r1   <- which.min(abs(r_grid.new   - 1))
     i_rho1 <- which.min(abs(rho_grid.new - 1))
@@ -258,12 +282,18 @@ plot_loglik <- function(formula, data, id = "id",
   }
 
   # ---- report optima ----
-  best_rho <- rho_grid[which.max(ll_BC)]
-  best_r   <- r_grid[which.max(ll_log)]
-  cat("Optimal rho (Box-Cox):", best_rho,
-      "  loglik:", round(max(ll_BC, na.rm = TRUE), 4), "\n")
-  cat("Optimal r   (Log)    :", best_r,
-      "  loglik:", round(max(ll_log, na.rm = TRUE), 4), "\n")
+  best_rho    <- rho_grid[which.max(ll_BC)]
+  best_r      <- r_grid[which.max(ll_log)]
+  best_ll_bc  <- round(max(ll_BC,  na.rm = TRUE), 4)
+  best_ll_log <- round(max(ll_log, na.rm = TRUE), 4)
+
+  cat("\nOptimal transformation parameters:\n")
+  tab_opt <- data.frame(
+    Model   = c("Box-Cox (Ghosh-Lin at rho=1)", "Log (Prop. odds at r=1)"),
+    Parameter = c(paste("rho =", best_rho), paste("r =", best_r)),
+    LogLik  = c(best_ll_bc, best_ll_log)
+  )
+  print(tab_opt, row.names = FALSE)
 
   invisible(data.frame(
     model  = c(rep("log", length(r_grid)),   rep("boxcox", length(rho_grid))),
