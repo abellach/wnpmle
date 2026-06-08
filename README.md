@@ -24,7 +24,7 @@ When no terminal events are present, the package automatically reduces to the
 unweighted NPMLE, which is equivalent to the **Zeng-Lin model** (Zeng and Lin, 2006).
 
 Both models are estimated via automatic differentiation (TMB). Standard errors
-are available via the adjusted sandwich estimator with correction for the estimated weights, a sandwich estimator without correction as an approximtion, and the inverse Fisher information.
+are available via the adjusted sandwich estimator with correction for the estimated weights, a sandwich estimator without correction as an approximation, and the inverse Fisher information.
 
 ## Installation
 
@@ -132,19 +132,20 @@ recurrent events with a competing terminal event. *arXiv preprint* [arXiv:2605.2
 
 ```bibtex
 @misc{bellach2026wnpmle,
-  title  = {Weighted {NPMLE} for the marginal mean of recurrent events
-            with a competing terminal event},
-  author = {Bellach, Anna and Kosorok, Michael R.},
-  year   = {2026},
-  eprint = {2605.25934},
+  title         = {Weighted {NPMLE} for the marginal mean of recurrent events
+                   with a competing terminal event},
+  author        = {Bellach, Anna and Kosorok, Michael R.},
+  year          = {2026},
+  eprint        = {2605.25934},
   archivePrefix = {arXiv},
-  url    = {https://arxiv.org/abs/2605.25934}
+  url           = {https://arxiv.org/abs/2605.25934}
 }
+```
 
 ## References
 
-Bellach, A., Kosorok, M.R., Fine, J.P. (2019). Weighted NPMLE for the
-subdistribution of a competing risk. *JASA*, 114(525), 259-270. [doi:10.1080/01621459.2017.1401540](https://doi.org/10.1080/01621459.2017.1401540)
+Bellach, A., Kosorok, M.R., Rüschendorf, L. and Fine, J.P. (2019). Weighted NPMLE for the
+subdistribution of a competing risk. *Journal of the American Statistical Association*, 114(525), 259-270. [doi:10.1080/01621459.2017.1401540](https://doi.org/10.1080/01621459.2017.1401540)
 
 Ghosh, D. and Lin, D.Y. (2002). Marginal regression models for recurrent and
 terminal events. *Statistica Sinica*, 12, 663-688. [doi:10.17615/pt0g-y207](https://doi.org/10.17615/pt0g-y207)
