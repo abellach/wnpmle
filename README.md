@@ -53,7 +53,7 @@ fit_bc <- wnpmle_fit(
   id    = "id",
   model = "boxcox",
   rho   = 1,
-  se    = "sandwich_adj"
+  se    = "sandwich"
 )
 summary(fit_bc)
 plot(fit_bc)
@@ -68,7 +68,7 @@ fit_log <- wnpmle_fit(
   id    = "id",
   model = "log",
   rho   = 1,
-  se    = "sandwich_adj"
+  se    = "sandwich"
 )
 summary(fit_log)
 plot(fit_log)
@@ -117,7 +117,8 @@ subject with columns:
 If you use this package in your research, please cite:
 
 Bellach, A. and Kosorok, M.R. (2026). Weighted NPMLE for the marginal mean of
-recurrent events with a competing terminal event. 
+recurrent events with a competing terminal event. *Journal of the American
+Statistical Association*, to appear.
 
 Preprint available at: https://arxiv.org/abs/2605.25934
 
