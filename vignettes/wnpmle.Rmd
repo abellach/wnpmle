@@ -200,7 +200,13 @@ which is useful when profiling over a grid of transformation parameters.
 
 ---
 
-## Reference
+## References
 
-For the methodology underlying this package, see Bellach A. and Kosorok M.R. (2026),
-available at https://arxiv.org/abs/2605.25934.
+Bellach, A. and Kosorok, M.R. (2026). Weighted NPMLE for the marginal mean of recurrent events with a competing terminal event. *arXiv preprint* [arXiv:2605.25934](https://arxiv.org/abs/2605.25934).
+
+Bellach, A., Kosorok, M.R., Rüschendorf, L. and Fine, J.P. (2019). Weighted NPMLE for the subdistribution of a competing risk. *Journal of the American Statistical Association*, 114(525), 259–270. [doi:10.1080/01621459.2017.1401540](https://doi.org/10.1080/01621459.2017.1401540).
+
+Ghosh, D. and Lin, D.Y. (2002). Marginal regression models for recurrent and terminal events. *Statistica Sinica*, 12, 663–688. [doi:10.17615/pt0g-y207](https://doi.org/10.17615/pt0g-y207).
+
+Zeng, D. and Lin, D.Y. (2006). Semiparametric transformation models with random effects for recurrent events. *Biometrika*, 93(3), 627–640. [doi:10.1093/biomet/93.3.627](https://doi.org/10.1093/biomet/93.3.627).
+
