@@ -80,7 +80,7 @@ fit_bc <- wnpmle_fit(
   model = "boxcox",
   rho   = 1,
   tau   = 59,
-  se    = "sandwich"
+  se    = "sandwich_adj"
 )
 summary(fit_bc)
 bl_bc <- baseline(fit_bc)
@@ -103,7 +103,7 @@ fit_log <- wnpmle_fit(
   model = "log",
   rho   = 1,
   tau   = 59,
-  se    = "sandwich"
+  se    = "sandwich_adj"
 )
 summary(fit_log)
 bl_log <- baseline(fit_log)
@@ -171,13 +171,15 @@ console.
 
 ## Standard errors
 
-The sandwich variance estimator accounts for the estimation of the inverse
+The adjusted sandwich variance estimator accounts for the estimation of the inverse
 probability of censoring weights. Set `se = "none"` to skip SE computation,
 which is useful when profiling over a grid of transformation parameters.
 
 | Value | Description |
 |-------|-------------|
-| `"sandwich"` | Sandwich variance estimator (default) |
+| `"sandwich_adj"` | Sandwich variance estimator (default) |
+| `"sandwich"` | Sandwich variance estimator without adjustment (approximation) |
+| `"fisher"` | Inverse fisher information |
 | `"none"` | No standard errors, faster, useful for profiling |
 
 ---
