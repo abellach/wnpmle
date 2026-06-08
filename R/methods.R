@@ -1,6 +1,7 @@
 #' Print method for wnpmle objects
 #' @param x A \code{wnpmle} object.
 #' @param ... Ignored.
+#' @return Invisibly returns \code{x}.
 #' @export
 print.wnpmle <- function(x, ...) {
   cat("\nWeighted NPMLE - Recurrent Events with Competing Terminal Event\n")
@@ -33,6 +34,7 @@ print.wnpmle <- function(x, ...) {
 #' @param tau_grid Logical; if \code{TRUE} (default), also show Lambda at
 #'   tau/4, tau/2, and tau.
 #' @param ... Ignored.
+#' @return Invisibly returns \code{object}.
 #' @export
 summary.wnpmle <- function(object, tau_grid = TRUE, ...) {
   print(object)
@@ -63,6 +65,7 @@ summary.wnpmle <- function(object, tau_grid = TRUE, ...) {
 #' Extract coefficients from a wnpmle object
 #' @param object A \code{wnpmle} object.
 #' @param ... Ignored.
+#' @return A named numeric vector of regression coefficients.
 #' @export
 coef.wnpmle <- function(object, ...) object$coefficients
 
@@ -74,6 +77,9 @@ coef.wnpmle <- function(object, ...) object$coefficients
 #'
 #' @param object A \code{wnpmle} object.
 #' @param ... Ignored.
+#' @return A numeric matrix containing the variance-covariance matrix for
+#'   the regression coefficients and cumulative baseline mean function.
+#'   Returns an error if \code{se = "none"} was used in \code{wnpmle_fit}.
 #' @export
 vcov.wnpmle <- function(object, ...) {
   if (is.null(object$vcov))
@@ -86,6 +92,9 @@ vcov.wnpmle <- function(object, ...) {
 #'
 #' @param object A \code{wnpmle} object.
 #' @param ... Ignored.
+#' @return An object of class \code{"logLik"} with the log-likelihood value,
+#'   degrees of freedom (\code{df}) equal to the number of regression
+#'   coefficients, and number of observations (\code{nobs}).
 #' @export
 logLik.wnpmle <- function(object, ...) {
   val <- object$loglik
@@ -100,6 +109,7 @@ logLik.wnpmle <- function(object, ...) {
 #' @param object A \code{wnpmle} object.
 #' @param ... Ignored.
 #' @param k Penalty per parameter (default 2 for AIC).
+#' @return A numeric scalar giving the AIC value.
 #' @export
 AIC.wnpmle <- function(object, ..., k = 2) {
   p <- length(object$coefficients)
@@ -110,6 +120,7 @@ AIC.wnpmle <- function(object, ..., k = 2) {
 #'
 #' @param object A \code{wnpmle} object.
 #' @param ... Ignored.
+#' @return A numeric scalar giving the BIC value.
 #' @export
 BIC.wnpmle <- function(object, ...) {
   p <- length(object$coefficients)
@@ -147,7 +158,7 @@ BIC.wnpmle <- function(object, ...) {
 #'   \code{loglik}, invisibly.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' bdata <- bladder_prep()
 #' bdata_clean <- bdata[, c("id", "time", "status", "treat", "num", "size")]
 #' plot_loglik(Surv(time, status) ~ treat + num + size,
@@ -211,9 +222,6 @@ plot_loglik <- function(formula, data, id = "id",
       cat("  Log:", k, "/", length(r_grid), "\n")
   }
 
-  # match paper: use the value at param=1 of the OTHER model as starting point
-  # BC curve starts at loglik of log model at r=1
-  # log curve starts at loglik of BC model at rho=1
   i_r1_val   <- which.min(abs(r_grid   - 1))
   i_rho1_val <- which.min(abs(rho_grid - 1))
 
@@ -224,6 +232,9 @@ plot_loglik <- function(formula, data, id = "id",
 
   # ---- plot ----
   if (!is.null(file)) pdf(file, width = 3.5, height = 3.5, useDingbats = FALSE)
+
+  oldpar <- par(no.readonly = TRUE)
+  on.exit(par(oldpar))
 
   ylim_all <- range(c(ll_log.new, ll_BC.new), finite = TRUE)
   max_r    <- ceiling(max(r_grid.new)   / 0.4) * 0.4
@@ -246,28 +257,13 @@ plot_loglik <- function(formula, data, id = "id",
           labels = c(abs(ticks_left), ticks_right[-1]))
   axis(2)
 
-  #mtext("Transformation parameter", side = 1, line = 3.5)
-  #mtext("r",             side = 1, at = -0.7 * max_r,   line = 1.8)
-  #mtext(expression(rho), side = 1, at =  0.7 * max_rho, line = 1.8)
-  # 1. Get the exact user limits of your X-axis
-  #x_limits <- par("usr")[1:2] 
-  #x_min <- x_limits[1]
-  #x_max <- x_limits[2]
-  # 2. Place text dynamically based on the actual plot width
-  #mtext("Logarithmic transformation", side = 3, at = x_min + 0.25 * (x_max - x_min), adj = 0.5, cex = 0.85)
-  #mtext("Box-Cox transformation",     side = 3, at = x_min + 0.75 * (x_max - x_min), adj = 0.5, cex = 0.85)
-  #mtext("Logarithmic transformation", side = 3, at = -0.5 * max_r,   adj = 0.5, cex = 0.85)
-  #mtext("Box-Cox transformation",     side = 3, at =  0.5 * max_rho, adj = 0.5, cex = 0.85)
-
   mtext("Transformation parameter", side = 1, line = 3.5)
   mtext("r",             side = 1, at = -0.7 * max_r,   line = 1.8)
   mtext(expression(rho), side = 1, at =  0.7 * max_rho, line = 1.8)
-  
-  # Added line = 1 to safely push the titles into the top margin space
+
   mtext("Logarithmic transformation", side = 3, at = -0.5 * max_r,   adj = 0.5, cex = 0.85, line = 1)
   mtext("Box-Cox transformation",     side = 3, at =  0.5 * max_rho, adj = 0.5, cex = 0.85, line = 1)
-  
-  
+
   if (mark_points) {
     i_r1   <- which.min(abs(r_grid.new   - 1))
     i_rho1 <- which.min(abs(rho_grid.new - 1))
@@ -318,11 +314,11 @@ plot_loglik <- function(formula, data, id = "id",
 #'   \item{lambda}{Estimated baseline increments.}
 #'   \item{Lambda}{Estimated cumulative baseline mean.}
 #'   \item{se_Lambda}{Standard error of Lambda (if SE was estimated).}
-#'   \item{lower}{Lower confidence band for Lambda.}
-#'   \item{upper}{Upper confidence band for Lambda.}
+#'   \item{lower}{Lower pointwise confidence band for Lambda.}
+#'   \item{upper}{Upper pointwise confidence band for Lambda.}
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' bdata <- bladder_prep()
 #' bdata_clean <- bdata[, c("id", "time", "status", "treat", "num", "size")]
 #' fit <- wnpmle_fit(Surv(time, status) ~ treat + num + size,
@@ -352,6 +348,39 @@ baseline <- function(object, conf_level = 0.95, ...) {
 }
 
 
+#' Plot method for wnpmle objects
+#'
+#' Plots the estimated cumulative baseline mean function Lambda(t) with
+#' optional pointwise confidence bands.
+#'
+#' @param x A \code{wnpmle} object.
+#' @param conf_bands Logical; if \code{TRUE} (default), adds pointwise 95\%
+#'   confidence bands when available.
+#' @param ... Additional graphical parameters passed to \code{plot}.
+#' @return No return value, called for side effects (produces a plot).
+#' @export
+plot.wnpmle <- function(x, conf_bands = TRUE, ...) {
+  bl <- baseline(x)
+
+  oldpar <- par(no.readonly = TRUE)
+  on.exit(par(oldpar))
+
+  plot(bl$time, bl$Lambda, type = "s",
+       xlab = "Time", ylab = expression(hat(Lambda)(t)),
+       main = paste0("Cumulative baseline mean (", toupper(x$model),
+                     ", ", if (x$model == "boxcox") "rho" else "r",
+                     " = ", x$rho, ")"),
+       ...)
+
+  if (conf_bands && !is.null(bl$lower)) {
+    lines(bl$time, bl$lower, lty = 2, col = "grey50")
+    lines(bl$time, bl$upper, lty = 2, col = "grey50")
+  }
+
+  invisible(x)
+}
+
+
 #' Predict marginal mean for new covariate values
 #'
 #' @param object A \code{wnpmle} object.
@@ -361,8 +390,10 @@ baseline <- function(object, conf_level = 0.95, ...) {
 #' @param times Time points at which to evaluate the marginal mean.
 #'   If \code{NULL}, uses the observed recurrent event times.
 #' @param ... Ignored.
-#' @return A data frame with columns \code{time} and one column per row of
-#'   \code{newdata} (or a single column \code{mu} for baseline).
+#' @return A data frame with column \code{time} and one column per row of
+#'   \code{newdata} named \code{mu_1}, \code{mu_2}, etc. If \code{newdata}
+#'   is \code{NULL}, returns a single column named \code{mu} for the
+#'   baseline covariate profile.
 #' @export
 predict.wnpmle <- function(object, newdata = NULL, times = NULL, ...) {
   Lambda <- object$Lambda
