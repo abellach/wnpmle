@@ -27,8 +27,9 @@
 #'   truncated at \code{tau}. If \code{NULL} (default), uses the maximum
 #'   observed time.
 #' @param se Variance estimation method: \code{"sandwich_adj"} (default,
-#'   sandwich with censoring correction), \code{"sandwich"} (plain sandwich),
-#'   \code{"fisher"} (inverse Hessian), or \code{"none"}.
+#'   sandwich with censoring correction), \code{"sandwich_adjold"} (same
+#'   correction using original loop-based code, for validation only),
+#'   \code{"sandwich"} (plain sandwich), \code{"fisher"}, or \code{"none"}.
 #' @param init_beta Initial values for regression coefficients (default: all
 #'   zeros).
 #' @param control A list of control parameters passed to \code{\link[stats]{nlminb}}.
@@ -54,21 +55,21 @@
 #' @details
 #' **Analysis types:** Currently only \code{type = "recurrent"} is implemented,
 #' for the recurrent events with competing terminal event setting. Support for
-#' \code{"cmprsk"} (Bellach, Kosorok, Rüschendorf and Fine, 2019) and
-#' \code{"cmprsk_ltrc"} (left truncation and right censoring) will be
+#' \code{"competing_risks"} (Bellach, Kosorok, Rüschendorf and Fine, 2019) and
+#' \code{"competing_risks_ltrc"} (left truncation and right censoring) will be
 #' added in future versions.
 #'
-#' **Transformation models:** The two models differ in the link function G:
+#' **Transformation models:** The two models differ in the link function \eqn{G}:
 #' \itemize{
-#'   \item **Box-Cox**: G(x) = ((1 + x)^rho - 1) / rho
-#'   \item **Logarithmic**: G(x) = log(1 + r*x) / r
+#'   \item **Box-Cox**: \eqn{G(x) = ((1 + x)^\rho - 1) / \rho}, with
+#'     \eqn{G(x) \to \log(1+x)} as \eqn{\rho \to 0}.
+#'   \item **Logarithmic**: \eqn{G(x) = \log(1 + r \cdot x) / r}, with
+#'     \eqn{G(x) \to x} as \eqn{r \to 0}.
 #' }
-#'
-#' **Variance estimation:** \code{"sandwich_adj"} (recommended) corrects for
-#' the estimation of the censoring weights via a martingale correction term.
-#' \code{"sandwich"} omits this correction and is faster. For large datasets
-#' (n > 5000), \code{"sandwich"} is recommended as a fast approximation.
-#' \code{"fisher"} uses the inverse Hessian from TMB.
+#' Both are estimated via automatic differentiation using TMB. The sandwich
+#' variance estimator accounts for the estimation of the censoring weights.
+#' The censoring-corrected sandwich adds an influence function correction
+#' for the Kaplan-Meier censoring weight estimation.
 #'
 #' @references
 #' Bellach, A. and Kosorok, M.R. (2026). Weighted NPMLE for the marginal mean
@@ -84,7 +85,7 @@
 #'   library(survival)
 #'   data("bladder2", package = "survival")
 #'   bladder2_prepped <- bladder_prep()
-#'
+#' 
 #'   fit <- wnpmle_fit(Surv(time, status) ~ treat + num + size,
 #'                     data = bladder2_prepped, id = "id",
 #'                     model = "log", rho = 1)
@@ -95,11 +96,13 @@
 wnpmle_fit <- function(formula,
                        data,
                        id      = "id",
-                       type    = c("recurrent", "cmprsk", "cmprsk_ltrc"),
+                       type    = c("recurrent", "competing_risks",
+                                   "competing_risks_ltrc"),
                        model   = c("boxcox", "log"),
                        rho     = 1,
                        tau     = NULL,
-                       se      = c("sandwich_adj", "sandwich", "fisher", "none"),
+                       se      = c("sandwich", "sandwich_corrected",
+                                   "fisher", "none"),
                        init_beta = NULL,
                        control   = list(),
                        silent    = TRUE) {
@@ -118,7 +121,9 @@ wnpmle_fit <- function(formula,
   }
 
   # ---- 1. Parse formula and data ----
+  # Extract time and status variable names from the Surv() call in the formula
   resp <- as.character(formula[[2]])
+  # resp is like c("Surv", "time", "status") or c("survival::Surv", "time", "status")
   if (!grepl("Surv", resp[1]) || length(resp) < 3)
     stop("Response must be a Surv object: Surv(time, status)")
 
@@ -133,6 +138,7 @@ wnpmle_fit <- function(formula,
   time_col   <- data[[time_var]]
   status_col <- as.integer(data[[status_var]])
 
+  # build covariate matrix from RHS of formula
   rhs_formula <- formula
   rhs_formula[[2]] <- NULL
   cov_mat <- model.matrix(rhs_formula, data)[, -1, drop = FALSE]
@@ -171,7 +177,7 @@ wnpmle_fit <- function(formula,
   n02  <- num2 + numc
 
   if (num1 == 0) stop("No recurrent events (status == 1) found.")
-  zeng_lin <- (num2 == 0)
+  zeng_lin <- (num2 == 0)   # no terminal events: reduce to Zeng-Lin (plain NPMLE)
   if (zeng_lin && se != "none") {
     message("No terminal events found: fitting Zeng-Lin model (plain NPMLE). ",
             "Switching variance estimator to 'sandwich'.")
@@ -182,6 +188,7 @@ wnpmle_fit <- function(formula,
   if (is.null(tau)) tau <- max(mydata$time)
 
   # ---- 4. KM censoring weights ----
+  # When num2==0 (Zeng-Lin): kmc=1 for all (weights are known, not estimated)
   if (zeng_lin) {
     mydata$kmc <- 1
   } else {
@@ -207,6 +214,7 @@ wnpmle_fit <- function(formula,
   covc   <- cova[M$status0 == 1, , drop = FALSE]
   numcov <- ncol(cova)
 
+  # indicator matrices (outer product form, consistent with simulation code)
   M3 <- outer(M1$ind,  M1$ind,  FUN = ">=") * 1L
   M5 <- outer(Mc$ind,  M1$ind,  FUN = ">=") * 1L
   M6 <- outer(M2$ind,  M1$ind,  FUN = ">=") * 1L
@@ -221,10 +229,12 @@ wnpmle_fit <- function(formula,
   ind2  <- M2$ind
 
   if (model == "boxcox") {
+    # BC cpp: idx02 values -1..num1-1
     idx02 <- as.integer(findInterval(ind02, ind1)) - 1L
     idx2  <- as.integer(findInterval(ind2,  ind1)) - 1L
     stopifnot(min(idx02) >= -1L, max(idx02) <= num1 - 1L)
   } else {
+    # log cpp: idx02 values 0..num1 (no -1L)
     idx02 <- as.integer(findInterval(ind02, ind1))
     idx2  <- as.integer(findInterval(ind2,  ind1)) - 1L
     stopifnot(min(idx02) >= 0L, max(idx02) <= num1)
@@ -271,10 +281,12 @@ wnpmle_fit <- function(formula,
 
   loglik <- -opt$objective
 
+  # time points for Lambda
   t4 <- sum(M1$time < tau / 4)
   t2 <- sum(M1$time < tau / 2)
   t1 <- sum(M1$time < tau + 0.1)
 
+  # transformation for Lambda (from alpha to lambda parameterisation)
   J       <- diag(c(rep(1, numcov), lambda_hat))
   Mtrafo  <- rbind(
     cbind(diag(numcov),            matrix(0, numcov, num1)),
@@ -302,24 +314,40 @@ wnpmle_fit <- function(formula,
       vcov_mat <- breadinv
     }
 
-    if (se %in% c("sandwich", "sandwich_adj")) {
+    if (se %in% c("sandwich", "sandwich_adj", "sandwich_adjold")) {
       Lambda <- as.numeric(M3 %*% lambda_hat)
       Lamc   <- as.numeric(M5 %*% lambda_hat)
       Lam2   <- as.numeric(M6 %*% lambda_hat)
       beta   <- beta_hat
 
-      gradi <- .compute_score(
-        model, rho_val, numcov, num1, numi, n02, num2,
-        cov1, cov2, cov02, covc, beta, lambda_hat, Lambda,
-        Lamc, Lam2, wnew, M1, M2, Mc
-      )
-
-      if (se == "sandwich_adj" && !zeng_lin) {
-        psi_subj <- .censoring_correction(
+      if (se == "sandwich_adjold") {
+        gradi <- .compute_score_old(
           model, rho_val, numcov, num1, numi, n02, num2,
-          cov2, beta, lambda_hat, Lambda, wnew,
-          M1, M2, M02
+          cov1, cov2, cov02, covc, beta, lambda_hat, Lambda,
+          Lamc, Lam2, wnew, M1, M2, Mc
         )
+      } else {
+        gradi <- .compute_score(
+          model, rho_val, numcov, num1, numi, n02, num2,
+          cov1, cov2, cov02, covc, beta, lambda_hat, Lambda,
+          Lamc, Lam2, wnew, M1, M2, Mc
+        )
+      }
+
+      if (se %in% c("sandwich_adj", "sandwich_adjold") && !zeng_lin) {
+        if (se == "sandwich_adjold") {
+          psi_subj <- .censoring_correction_old(
+            model, rho_val, numcov, num1, numi, n02, num2,
+            cov2, beta, lambda_hat, Lambda, wnew,
+            M1, M2, M02
+          )
+        } else {
+          psi_subj <- .censoring_correction(
+            model, rho_val, numcov, num1, numi, n02, num2,
+            cov2, beta, lambda_hat, Lambda, wnew,
+            M1, M2, M02
+          )
+        }
         gradi_eff <- gradi + psi_subj
       } else {
         gradi_eff <- gradi
@@ -359,6 +387,7 @@ wnpmle_fit <- function(formula,
       t_grid       = c(tau4 = t4, tau2 = t2, tau = t1),
       convergence  = opt$message,
       call         = cl,
+      # internal objects needed for predict/plot
       .M1          = M1,
       .M02         = M02,
       .covars      = covars

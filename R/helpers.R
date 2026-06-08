@@ -3,11 +3,14 @@
 # Score contributions use subject-level indexing (n x pscore),
 # consistent with the simulation study implementation.
 
-# ---- Score contributions (gradi matrix) ----
-# Returns n x (numcov + num1) matrix indexed by subject id.
-.compute_score <- function(model, rho, numcov, num1, n, n02, num2,
-                            cov1, cov2, cov02, covc, beta, lambda, Lambda,
-                            Lamc, Lam2, wnew, M1, M2, Mc) {
+# ======================================================================
+# OLD VERSIONS (loop-based) — kept for validation only
+# Will be removed once sandwich_adj and sandwich_adjold are confirmed equal
+# ======================================================================
+
+.compute_score_old <- function(model, rho, numcov, num1, n, n02, num2,
+                                cov1, cov2, cov02, covc, beta, lambda, Lambda,
+                                Lamc, Lam2, wnew, M1, M2, Mc) {
 
   gradi <- matrix(0, nrow = n, ncol = numcov + num1)
 
@@ -17,7 +20,6 @@
 
   if (model == "boxcox") {
 
-    # -- censored subjects --
     MGcbet <- (1 + ezc * Lamc)^(rho - 1)
     if (nrow(Mc) > 0) {
       for (j in seq_len(nrow(Mc))) {
@@ -31,7 +33,6 @@
       }
     }
 
-    # -- terminal events --
     if (num2 > 0) {
       Mglami   <- t(matrix(rep(lambda, num2), nrow = num1))
       MGLami   <- t(matrix(rep(Lambda, num2), nrow = num1))
@@ -65,7 +66,6 @@
       }
     }
 
-    # -- recurrent events --
     MGgrad1 <- (rho - 1) / (1 + ez1 * Lambda)
     for (i in seq_len(num1)) {
       idi <- M1$id[i]
@@ -77,9 +77,8 @@
           ((i == k) / lambda[k] + (k <= i) * ez1[i] * MGgrad1[i])
     }
 
-  } else {  # logarithmic: G'(x) = 1/(1+rx),  G''(x) = -r/(1+rx)^2
+  } else {
 
-    # -- censored subjects --
     MGcbet <- 1 / (1 + rho * ezc * Lamc)
     if (nrow(Mc) > 0) {
       for (j in seq_len(nrow(Mc))) {
@@ -93,7 +92,6 @@
       }
     }
 
-    # -- terminal events --
     if (num2 > 0) {
       Mglami   <- t(matrix(rep(lambda, num2), nrow = num1))
       MGLami   <- t(matrix(rep(Lambda, num2), nrow = num1))
@@ -127,7 +125,6 @@
       }
     }
 
-    # -- recurrent events --
     MGgrad1 <- (-rho) / (1 + rho * ez1 * Lambda)
     for (i in seq_len(num1)) {
       idi <- M1$id[i]
@@ -144,19 +141,15 @@
 }
 
 
-# ---- Censoring correction (psi_subj matrix) ----
-# Returns n x (numcov + num1) matrix of censoring-correction terms,
-# accumulated at the subject level (matching simulation study implementation).
-.censoring_correction <- function(model, rho, numcov, num1, n, n02, num2,
-                                   cov2, beta, lambda, Lambda, wnew,
-                                   M1, M2, M02) {
+.censoring_correction_old <- function(model, rho, numcov, num1, n, n02, num2,
+                                       cov2, beta, lambda, Lambda, wnew,
+                                       M1, M2, M02) {
 
   ez2 <- as.numeric(exp(cov2 %*% beta))
 
   MLam    <- t(matrix(rep(Lambda, num2), nrow = num1))
   Mlam    <- t(matrix(rep(lambda, num2), nrow = num1))
   Mlamn02 <- t(matrix(rep(lambda, n02),  nrow = n02))
-
   Mzbetn02 <- t(matrix(rep(ez2, n02),  nrow = n02))
   Mzbet    <- matrix(rep(ez2, num1),   nrow = num2)
   MzbL     <- Mzbet * MLam
@@ -169,7 +162,6 @@
     MG2 <- (-rho) / (1 + rho * MzbL)^2
   }
 
-  # Nelson-Aalen-type censoring hazard increments
   Mus1 <- matrix(0, n02, n02); diag(Mus1) <- M02$status0
   hazn <- (M02$status == 0) / (n02 - M02$idM02 + 1)
   Mus2 <- matrix(0, n02, n02)
@@ -221,13 +213,184 @@
   q  <- rbind(q1, q21 + q22)
   pi <- n02 - M02$idM02 + 1
 
-  # psi at the M02-row level
   psi_row <- matrix(0, nrow = n02, ncol = numcov + num1)
   for (k in seq_len(numcov + num1))
     for (i in seq_len(n02))
       psi_row[i, k] <- sum((q[k, ] / pi) * Mu[i, ])
 
-  # accumulate back to subjects (each subject may have multiple M02 rows)
+  psi_subj <- matrix(0, nrow = n, ncol = numcov + num1)
+  for (i in seq_len(n02))
+    psi_subj[M02$id[i], ] <- psi_subj[M02$id[i], ] + psi_row[i, ]
+
+  psi_subj
+}
+
+
+# ======================================================================
+# NEW VERSIONS (vectorised) — matrix operations replacing nested loops
+# ======================================================================
+
+.compute_score <- function(model, rho, numcov, num1, n, n02, num2,
+                            cov1, cov2, cov02, covc, beta, lambda, Lambda,
+                            Lamc, Lam2, wnew, M1, M2, Mc) {
+
+  gradi <- matrix(0, nrow = n, ncol = numcov + num1)
+
+  ez1 <- as.numeric(exp(cov1  %*% beta))
+  ez2 <- as.numeric(exp(cov2  %*% beta))
+  ezc <- as.numeric(exp(covc  %*% beta))
+
+  if (model == "boxcox") {
+
+    MGcbet <- (1 + ezc * Lamc)^(rho - 1)
+    if (nrow(Mc) > 0) {
+      gradi[Mc$id, seq_len(numcov)] <- gradi[Mc$id, seq_len(numcov)] +
+        (ezc * Lamc * MGcbet) * covc
+      ind_c1 <- outer(Mc$ind, M1$ind, "<=")
+      gradi[Mc$id, numcov + seq_len(num1)] <-
+        gradi[Mc$id, numcov + seq_len(num1)] +
+        ind_c1 * (ezc * MGcbet)
+    }
+
+    if (num2 > 0) {
+      Mglami   <- t(matrix(rep(lambda, num2), nrow = num1))
+      MGLami   <- t(matrix(rep(Lambda, num2), nrow = num1))
+      MGgrad2  <- (1 + ez2 * Lam2)^(rho - 1)
+      vgrbet   <- ez2
+      Mgcov2b  <- matrix(rep(vgrbet, num1), nrow = num2)
+      Mgradin  <- Mgcov2b * MGLami
+      MG1grad2 <- (1 + Mgradin)^(rho - 1)
+      MG2grad2 <- (rho - 1) * (1 + Mgradin)^(rho - 2)
+      MGgra1   <- wnew * Mglami * (MG1grad2 + MGLami * Mgcov2b * MG2grad2)
+      Mgrb1    <- wnew * MG1grad2
+      Mgrb2    <- wnew * MG2grad2 * Mglami
+
+      beta_term1 <- (ez2 * Lam2 * MGgrad2) * cov2
+      beta_term2 <- vgrbet * rowSums(MGgra1) * cov2
+      gradi[M2$id, seq_len(numcov)] <-
+        gradi[M2$id, seq_len(numcov)] + beta_term1 + beta_term2
+
+      ind_21    <- outer(M1$ind, M2$ind, "<=")
+      lam_term1 <- t(ind_21) * (ez2 * MGgrad2)
+      lam_term2 <- vgrbet * Mgrb1
+      Mgrb2_cumrev <- t(apply(Mgrb2, 1, function(x) rev(cumsum(rev(x)))))
+      lam_term3 <- (vgrbet^2) * Mgrb2_cumrev
+      gradi[M2$id, numcov + seq_len(num1)] <-
+        gradi[M2$id, numcov + seq_len(num1)] +
+        lam_term1 + lam_term2 + lam_term3
+    }
+
+    MGgrad1 <- (rho - 1) / (1 + ez1 * Lambda)
+    gradi[M1$id, seq_len(numcov)] <- gradi[M1$id, seq_len(numcov)] -
+      (1 + ez1 * Lambda * MGgrad1) * cov1
+    diag_term  <- matrix(0, num1, num1); diag(diag_term) <- -1 / lambda
+    ind_11     <- outer(seq_len(num1), seq_len(num1), ">=")
+    lower_term <- -ind_11 * (ez1 * MGgrad1)
+    gradi[M1$id, numcov + seq_len(num1)] <-
+      gradi[M1$id, numcov + seq_len(num1)] + diag_term + lower_term
+
+  } else {
+
+    MGcbet <- 1 / (1 + rho * ezc * Lamc)
+    if (nrow(Mc) > 0) {
+      gradi[Mc$id, seq_len(numcov)] <- gradi[Mc$id, seq_len(numcov)] +
+        (ezc * Lamc * MGcbet) * covc
+      ind_c1 <- outer(Mc$ind, M1$ind, "<=")
+      gradi[Mc$id, numcov + seq_len(num1)] <-
+        gradi[Mc$id, numcov + seq_len(num1)] +
+        ind_c1 * (ezc * MGcbet)
+    }
+
+    if (num2 > 0) {
+      Mglami   <- t(matrix(rep(lambda, num2), nrow = num1))
+      MGLami   <- t(matrix(rep(Lambda, num2), nrow = num1))
+      MGgrad2  <- 1 / (1 + rho * ez2 * Lam2)
+      vgrbet   <- ez2
+      Mgcov2b  <- matrix(rep(vgrbet, num1), nrow = num2)
+      Mgradin  <- Mgcov2b * MGLami
+      MG1grad2 <- 1     / (1 + rho * Mgradin)
+      MG2grad2 <- (-rho) / (1 + rho * Mgradin)^2
+      MGgra1   <- wnew * Mglami * (MG1grad2 + MGLami * Mgcov2b * MG2grad2)
+      Mgrb1    <- wnew * MG1grad2
+      Mgrb2    <- wnew * MG2grad2 * Mglami
+
+      beta_term1 <- (ez2 * Lam2 * MGgrad2) * cov2
+      beta_term2 <- vgrbet * rowSums(MGgra1) * cov2
+      gradi[M2$id, seq_len(numcov)] <-
+        gradi[M2$id, seq_len(numcov)] + beta_term1 + beta_term2
+
+      ind_21    <- outer(M1$ind, M2$ind, "<=")
+      lam_term1 <- t(ind_21) * (ez2 * MGgrad2)
+      lam_term2 <- vgrbet * Mgrb1
+      Mgrb2_cumrev <- t(apply(Mgrb2, 1, function(x) rev(cumsum(rev(x)))))
+      lam_term3 <- (vgrbet^2) * Mgrb2_cumrev
+      gradi[M2$id, numcov + seq_len(num1)] <-
+        gradi[M2$id, numcov + seq_len(num1)] +
+        lam_term1 + lam_term2 + lam_term3
+    }
+
+    MGgrad1 <- (-rho) / (1 + rho * ez1 * Lambda)
+    gradi[M1$id, seq_len(numcov)] <- gradi[M1$id, seq_len(numcov)] -
+      (1 + ez1 * Lambda * MGgrad1) * cov1
+    diag_term  <- matrix(0, num1, num1); diag(diag_term) <- -1 / lambda
+    ind_11     <- outer(seq_len(num1), seq_len(num1), ">=")
+    lower_term <- -ind_11 * (ez1 * MGgrad1)
+    gradi[M1$id, numcov + seq_len(num1)] <-
+      gradi[M1$id, numcov + seq_len(num1)] + diag_term + lower_term
+  }
+
+  gradi
+}
+
+
+.censoring_correction <- function(model, rho, numcov, num1, n, n02, num2,
+                                   cov2, beta, lambda, Lambda, wnew,
+                                   M1, M2, M02) {
+
+  ez2 <- as.numeric(exp(cov2 %*% beta))
+
+  MLam    <- t(matrix(rep(Lambda, num2), nrow = num1))
+  Mlam    <- t(matrix(rep(lambda, num2), nrow = num1))
+  Mlamn02 <- t(matrix(rep(lambda, n02),  nrow = n02))
+  Mzbetn02 <- t(matrix(rep(ez2, n02),  nrow = n02))
+  Mzbet    <- matrix(rep(ez2, num1),   nrow = num2)
+  MzbL     <- Mzbet * MLam
+
+  if (model == "boxcox") {
+    MG1 <- (1 + MzbL)^(rho - 1)
+    MG2 <- (rho - 1) * (1 + MzbL)^(rho - 2)
+  } else {
+    MG1 <- 1     / (1 + rho * MzbL)
+    MG2 <- (-rho) / (1 + rho * MzbL)^2
+  }
+
+  Mus1 <- matrix(0, n02, n02); diag(Mus1) <- M02$status0
+  hazn <- (M02$status == 0) / (n02 - M02$idM02 + 1)
+  Mus2 <- outer(M02$idM02, M02$idM02, ">=") * hazn
+  Mu   <- Mus1 - Mus2
+
+  Muk.ind <- outer(M02$ind, M1$ind, "<=")
+  Mju.ind <- outer(M2$ind,  M02$ind, "<=")
+
+  Mjk     <- wnew * (MG1 + Mzbet * MLam * MG2) * Mlam
+  Mju     <- Mjk %*% t(Muk.ind)
+  Mju.new <- Mju * Mju.ind * Mzbetn02
+  q1      <- t(cov2) %*% Mju.new
+
+  M2jl <- wnew * Mzbet * MG1
+  M2lu <- t(M2jl) %*% Mju.ind
+  q21  <- t(Muk.ind) * M2lu
+
+  M3jk     <- (Mzbet^2) * wnew * MG2
+  M3ku     <- t(Muk.ind) * (t(M3jk) %*% Mju.ind)
+  M3ku.new <- M3ku * Mlamn02
+  q22      <- apply(M3ku.new, 2, function(col) rev(cumsum(rev(col))))
+
+  q  <- rbind(q1, q21 + q22)
+  pi <- n02 - M02$idM02 + 1
+
+  psi_row  <- Mu %*% t(q / pi)
+
   psi_subj <- matrix(0, nrow = n, ncol = numcov + num1)
   for (i in seq_len(n02))
     psi_subj[M02$id[i], ] <- psi_subj[M02$id[i], ] + psi_row[i, ]
