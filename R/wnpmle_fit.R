@@ -26,10 +26,9 @@
 #' @param tau Follow-up truncation time. Kaplan-Meier censoring weights are
 #'   truncated at \code{tau}. If \code{NULL} (default), uses the maximum
 #'   observed time.
-#' @param se Variance estimation method: \code{"sandwich_adj"} (default,
-#'   sandwich with censoring correction), \code{"sandwich_adjfast"} (same
-#'   correction faster code, still being developed),
-#'   \code{"sandwich"} (plain sandwich), \code{"fisher"}, or \code{"none"}.
+#' @param se Variance estimation method: \code{"sandwich"} (default),
+#'   \code{"sandwich_adj"} (sandwich with censoring correction),
+#'   \code{"fisher"}, or \code{"none"}.
 #' @param init_beta Initial values for regression coefficients (default: all
 #'   zeros).
 #' @param control A list of control parameters passed to \code{\link[stats]{nlminb}}.
@@ -55,8 +54,8 @@
 #' @details
 #' **Analysis types:** Currently only \code{type = "recurrent"} is implemented,
 #' for the recurrent events with competing terminal event setting. Support for
-#' \code{"competing_risks"} (Bellach, Kosorok, Rüschendorf and Fine, 2019) and
-#' \code{"competing_risks_ltrc"} (left truncation and right censoring) will be
+#' \code{"cmprsk"} (Bellach, Kosorok, Rüschendorf and Fine, 2019) and
+#' \code{"cmprsk_ltrc"} (left truncation and right censoring) will be
 #' added in future versions.
 #'
 #' **Transformation models:** The two models differ in the link function \eqn{G}:
@@ -101,8 +100,8 @@ wnpmle_fit <- function(formula,
                        model   = c("boxcox", "log"),
                        rho     = 1,
                        tau     = NULL,
-                       se      = c("sandwich_adj", "sandwich_adjfast",
-                                   "sandwich", "fisher", "none"),
+                       se      = c("sandwich_adj", "sandwich",
+                                   "fisher", "none"),
                        init_beta = NULL,
                        control   = list(),
                        silent    = TRUE) {
@@ -314,40 +313,25 @@ wnpmle_fit <- function(formula,
       vcov_mat <- breadinv
     }
 
-    if (se %in% c("sandwich", "sandwich_adj", "sandwich_adjfast")) {
+    if (se %in% c("sandwich", "sandwich_adj")) {
       Lambda <- as.numeric(M3 %*% lambda_hat)
       Lamc   <- as.numeric(M5 %*% lambda_hat)
       Lam2   <- as.numeric(M6 %*% lambda_hat)
       beta   <- beta_hat
 
-      if (se == "sandwich_adj") {
-        gradi <- .compute_score_old(
-          model, rho_val, numcov, num1, numi, n02, num2,
-          cov1, cov2, cov02, covc, beta, lambda_hat, Lambda,
-          Lamc, Lam2, wnew, M1, M2, Mc
-        )
-      } else {
-        gradi <- .compute_score(
-          model, rho_val, numcov, num1, numi, n02, num2,
-          cov1, cov2, cov02, covc, beta, lambda_hat, Lambda,
-          Lamc, Lam2, wnew, M1, M2, Mc
-        )
-      }
+      gradi <- .compute_score(
+        model, rho_val, numcov, num1, numi, n02, num2,
+        cov1, cov2, cov02, covc, beta, lambda_hat, Lambda,
+        Lamc, Lam2, wnew, M1, M2, Mc
+      )
 
-      if (se %in% c("sandwich_adj", "sandwich_adjfast") && !zeng_lin) {
-        if (se == "sandwich_adj") {
-          psi_subj <- .censoring_correction_old(
-            model, rho_val, numcov, num1, numi, n02, num2,
-            cov2, beta, lambda_hat, Lambda, wnew,
-            M1, M2, M02
-          )
-        } else {
-          psi_subj <- .censoring_correction(
-            model, rho_val, numcov, num1, numi, n02, num2,
-            cov2, beta, lambda_hat, Lambda, wnew,
-            M1, M2, M02
-          )
-        }
+      if (se == "sandwich_adj" && !zeng_lin) {
+        # psi correction only needed when KM weights are estimated (num2 > 0)
+        psi_subj <- .censoring_correction(
+          model, rho_val, numcov, num1, numi, n02, num2,
+          cov2, beta, lambda_hat, Lambda, wnew,
+          M1, M2, M02
+        )
         gradi_eff <- gradi + psi_subj
       } else {
         gradi_eff <- gradi
