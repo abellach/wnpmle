@@ -8,11 +8,11 @@ wnpmle_fit(
   formula,
   data,
   id = "id",
-  type = c("recurrent", "competing_risks", "competing_risks_ltrc"),
+  type = c("recurrent", "cmprsk", "cmprsk_ltrc"),
   model = c("boxcox", "log"),
   rho = 1,
   tau = NULL,
-  se = c("sandwich", "sandwich_corrected", "fisher", "none"),
+  se = c("sandwich_adj", "sandwich", "fisher", "none"),
   init_beta = NULL,
   control = list(),
   silent = TRUE
@@ -31,8 +31,8 @@ an \code{id} column identifying subjects.}
 
 \item{type}{Type of analysis. Currently only \code{"recurrent"} is
 supported (recurrent events with a competing terminal event).
-Future versions will add \code{"competing_risks"} (competing risks)
-and \code{"competing_risks_ltrc"} (competing risks with left truncation
+Future versions will add \code{"cmprsk"} (competing risks)
+and \code{"cmprsk_ltrc"} (competing risks with left truncation
 and right censoring).}
 
 \item{model}{Transformation model: \code{"boxcox"} (default) or
@@ -47,9 +47,9 @@ model). For \code{model = "log"}, this is the parameter r in
 truncated at \code{tau}. If \code{NULL} (default), uses the maximum
 observed time.}
 
-\item{se}{Variance estimation method: \code{"sandwich"} (default),
-\code{"sandwich_corrected"} (sandwich with censoring correction),
-\code{"fisher"}, or \code{"none"}.}
+\item{se}{Variance estimation method: \code{"sandwich_adj"} (default,
+sandwich with censoring correction), \code{"sandwich"} (plain sandwich),
+\code{"fisher"} (inverse Hessian), or \code{"none"}.}
 
 \item{init_beta}{Initial values for regression coefficients (default: all
 zeros).}
@@ -85,8 +85,8 @@ the Box-Cox model and the logarithmic model.
 \details{
 \strong{Analysis types:} Currently only \code{type = "recurrent"} is implemented,
 for the recurrent events with competing terminal event setting. Support for
-\code{"competing_risks"} (Bellach, Kosorok, Fine, 2019) and
-\code{"competing_risks_ltrc"} (left truncation and right censoring) will be
+\code{"cmprsk"} (Bellach, Kosorok, Ruschendorf and Fine, 2019) and
+\code{"cmprsk_ltrc"} (left truncation and right censoring) will be
 added in future versions.
 
 \strong{Transformation models:} The two models differ in the link function \eqn{G}:
@@ -98,11 +98,11 @@ added in future versions.
 }
 Both are estimated via automatic differentiation using TMB. The sandwich
 variance estimator accounts for the estimation of the censoring weights.
-The censoring-corrected sandwich adds an influence function correction
-for the Kaplan-Meier censoring weight estimation.
+The censoring-corrected sandwich (\code{sandwich_adj}) adds an influence
+function correction for the Kaplan-Meier censoring weight estimation.
 }
 \examples{
- \dontrun{
+ \donttest{
   library(survival)
   data("bladder2", package = "survival")
   bladder2_prepped <- bladder_prep()
@@ -116,10 +116,10 @@ for the Kaplan-Meier censoring weight estimation.
 }
 \references{
 Bellach, A. and Kosorok, M.R. (2026). Weighted NPMLE for the marginal mean
-of recurrent events with a competing terminal event. \emph{Journal of the
-American Statistical Association}, to appear.
+of recurrent events with a competing terminal event.
+\emph{arXiv preprint} arXiv:2605.25934.
 
-Bellach, A., Kosorok, M.R., Fine, J.P. (2019). Weighted NPMLE for the
+Bellach, A., Kosorok, M.R., Ruschendorf, L. and Fine, J.P. (2019). Weighted NPMLE for the
 subdistribution of a competing risk. \emph{Journal of the American
 Statistical Association}, 114(525), 259-270.
 }
