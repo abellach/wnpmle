@@ -27,8 +27,8 @@
 #'   truncated at \code{tau}. If \code{NULL} (default), uses the maximum
 #'   observed time.
 #' @param se Variance estimation method: \code{"sandwich_adj"} (default,
-#'   sandwich with censoring correction), \code{"sandwich_adjold"} (same
-#'   correction using original loop-based code, for validation only),
+#'   sandwich with censoring correction), \code{"sandwich_adjfast"} (same
+#'   correction faster code, still being developed),
 #'   \code{"sandwich"} (plain sandwich), \code{"fisher"}, or \code{"none"}.
 #' @param init_beta Initial values for regression coefficients (default: all
 #'   zeros).
@@ -101,7 +101,7 @@ wnpmle_fit <- function(formula,
                        model   = c("boxcox", "log"),
                        rho     = 1,
                        tau     = NULL,
-                       se      = c("sandwich_adj", "sandwich_adjold",
+                       se      = c("sandwich_adj", "sandwich_adjfast",
                                    "sandwich", "fisher", "none"),
                        init_beta = NULL,
                        control   = list(),
@@ -314,13 +314,13 @@ wnpmle_fit <- function(formula,
       vcov_mat <- breadinv
     }
 
-    if (se %in% c("sandwich", "sandwich_adj", "sandwich_adjold")) {
+    if (se %in% c("sandwich", "sandwich_adj", "sandwich_adjfast")) {
       Lambda <- as.numeric(M3 %*% lambda_hat)
       Lamc   <- as.numeric(M5 %*% lambda_hat)
       Lam2   <- as.numeric(M6 %*% lambda_hat)
       beta   <- beta_hat
 
-      if (se == "sandwich_adjold") {
+      if (se == "sandwich_adj") {
         gradi <- .compute_score_old(
           model, rho_val, numcov, num1, numi, n02, num2,
           cov1, cov2, cov02, covc, beta, lambda_hat, Lambda,
@@ -334,8 +334,8 @@ wnpmle_fit <- function(formula,
         )
       }
 
-      if (se %in% c("sandwich_adj", "sandwich_adjold") && !zeng_lin) {
-        if (se == "sandwich_adjold") {
+      if (se %in% c("sandwich_adj", "sandwich_adjfast") && !zeng_lin) {
+        if (se == "sandwich_adj") {
           psi_subj <- .censoring_correction_old(
             model, rho_val, numcov, num1, numi, n02, num2,
             cov2, beta, lambda_hat, Lambda, wnew,
