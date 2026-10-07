@@ -4,24 +4,46 @@
 \alias{predict.wnpmle}
 \title{Predict marginal mean for new covariate values}
 \usage{
-\method{predict}{wnpmle}(object, newdata = NULL, times = NULL, ...)
+\method{predict}{wnpmle}(
+  object,
+  newdata = NULL,
+  times = NULL,
+  conf_int = TRUE,
+  conf_level = 0.95,
+  ...
+)
 }
 \arguments{
 \item{object}{A \code{wnpmle} object.}
 
-\item{newdata}{A data frame with the same covariates used in fitting.
+\item{newdata}{A data frame with the same covariates used in fitting
+(factors may be given as factors or character strings).
 If \code{NULL}, returns the estimated Lambda(t) for the baseline
 (all covariates = 0).}
 
 \item{times}{Time points at which to evaluate the marginal mean.
 If \code{NULL}, uses the observed recurrent event times.}
 
+\item{conf_int}{Logical; if \code{TRUE} (default) and standard errors are
+available, adds pointwise confidence limits.}
+
+\item{conf_level}{Confidence level (default 0.95).}
+
 \item{...}{Ignored.}
 }
 \value{
-A data frame with columns \code{time} and one column per row of
-\code{newdata} (or a single column \code{mu} for baseline).
+A data frame with column \code{time} and, for each row \code{i} of
+\code{newdata}, columns \code{mu_i} and (if \code{conf_int}) \code{lower_i}
+and \code{upper_i}; or columns \code{mu} (and \code{lower}, \code{upper})
+for the baseline.
 }
 \description{
-Predict marginal mean for new covariate values
+Evaluates the estimated marginal mean number of recurrent events,
+\eqn{\hat\mu(t \mid z) = G\{e^{\hat\beta^T z} \hat\Lambda(t)\}}, at new
+covariate values, with pointwise confidence limits.
+}
+\details{
+The confidence limits are computed with the delta method from the
+estimated covariance matrix of \eqn{(\beta, \Lambda)} (\code{vcov(object)}),
+on the log scale so that they stay positive.
 }

@@ -2,9 +2,12 @@
 % Please edit documentation in R/methods.R
 \name{summary.wnpmle}
 \alias{summary.wnpmle}
+\alias{print.summary.wnpmle}
 \title{Summary method for wnpmle objects}
 \usage{
 \method{summary}{wnpmle}(object, tau_grid = TRUE, ...)
+
+\method{print}{summary.wnpmle}(x, ...)
 }
 \arguments{
 \item{object}{A \code{wnpmle} object.}
@@ -13,7 +16,13 @@
 tau/4, tau/2, and tau.}
 
 \item{...}{Ignored.}
+
+\item{x}{A \code{summary.wnpmle} object.}
 }
 \description{
 Summary method for wnpmle objects
+}
+\value{
+An object of class \code{summary.wnpmle}, printed with the coefficient
+table and, if \code{tau_grid = TRUE}, Lambda at tau/4, tau/2 and tau.
 }

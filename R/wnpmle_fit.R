@@ -26,9 +26,9 @@
 #' @param tau Follow-up truncation time. Kaplan-Meier censoring weights are
 #'   truncated at \code{tau}. If \code{NULL} (default), uses the maximum
 #'   observed time.
-#' @param se Variance estimation method: \code{"sandwich"} (default),
-#'   \code{"sandwich_adj"} (sandwich with censoring correction),
-#'   \code{"fisher"}, or \code{"none"}.
+#' @param se Variance estimation method: \code{"sandwich_adj"} (default,
+#'   sandwich with censoring correction), \code{"sandwich"} (plain sandwich),
+#'   \code{"fisher"} (inverse Hessian), or \code{"none"}.
 #' @param init_beta Initial values for regression coefficients (default: all
 #'   zeros).
 #' @param control A list of control parameters passed to \code{\link[stats]{nlminb}}.
@@ -80,7 +80,7 @@
 #' Statistical Association}, 114(525), 259-270.
 #'
 #' @examples
-#'  \dontrun{
+#'  \donttest{
 #'   library(survival)
 #'   data("bladder2", package = "survival")
 #'   bladder2_prepped <- bladder_prep()
@@ -141,6 +141,9 @@ wnpmle_fit <- function(formula,
   rhs_formula <- formula
   rhs_formula[[2]] <- NULL
   cov_mat <- model.matrix(rhs_formula, data)[, -1, drop = FALSE]
+  # terms and factor levels, so that predict() can handle factor covariates
+  rhs_terms <- stats::delete.response(stats::terms(rhs_formula, data = data))
+  rhs_xlev  <- stats::.getXlevels(rhs_terms, stats::model.frame(rhs_terms, data))
 
   if (!id %in% names(data))
     stop("Column '", id, "' not found in data.")
@@ -245,7 +248,7 @@ wnpmle_fit <- function(formula,
 
   # ---- 7. TMB data and parameters ----
   rho_val  <- as.numeric(rho)
-  dll_name <- if (model == "boxcox") "fn_BC_tmb" else "fn_log_tmb"
+  dll_name <- .wnpmle_compile_tmb_if_needed(model, silent = silent)
 
   data_tmb <- list(
     cov1  = cov1,
@@ -314,33 +317,27 @@ wnpmle_fit <- function(formula,
     }
 
     if (se %in% c("sandwich", "sandwich_adj")) {
-      Lambda <- as.numeric(M3 %*% lambda_hat)
-      Lamc   <- as.numeric(M5 %*% lambda_hat)
-      Lam2   <- as.numeric(M6 %*% lambda_hat)
-      beta   <- beta_hat
-
-      gradi <- .compute_score(
-        model, rho_val, numcov, num1, numi, n02, num2,
-        cov1, cov2, cov02, covc, beta, lambda_hat, Lambda,
-        Lamc, Lam2, wnew, M1, M2, Mc
+      # subject-wise scores (derivative of the negative log-likelihood,
+      # i.e. -eta_i in the paper), computed with TMB
+      gradi <- .compute_score_tmb(
+        model, data_tmb, parameters, opt$par,
+        numcov, num1, numi, lambda_hat, M1, M2, M02, silent = silent
       )
 
       if (se == "sandwich_adj" && !zeng_lin) {
-        # psi correction only needed when KM weights are estimated (num2 > 0)
-        psi_subj <- .censoring_correction(
-          model, rho_val, numcov, num1, numi, n02, num2,
-          cov2, beta, lambda_hat, Lambda, wnew,
-          M1, M2, M02
+        # censoring correction (kappa_i in the paper), computed with TMB.
+        # gradi is on the negative log-likelihood scale, so the correction is
+        # subtracted: -(eta_i + kappa_i) = gradi - psi_subj
+        psi_subj <- .censoring_correction_tmb(
+          model, data_tmb, parameters, opt$par,
+          numi, M1, M2, M02, silent = silent
         )
-        gradi_eff <- gradi + psi_subj
+        gradi_eff <- gradi - psi_subj
       } else {
         gradi_eff <- gradi
       }
 
-      grad <- array(0, dim = c(numcov + num1, numcov + num1, numi))
-      for (i in seq_len(numi))
-        grad[, , i] <- tcrossprod(gradi_eff[i, ])
-      meat     <- apply(grad, 1:2, sum)
+      meat     <- crossprod(gradi_eff)    # sum over subjects of gradi_i gradi_i^T
       sandw    <- Mtrafo %*% breadi %*% meat %*% t(breadi) %*% t(Mtrafo)
       vcov_mat <- sandw
     }
@@ -374,7 +371,9 @@ wnpmle_fit <- function(formula,
       # internal objects needed for predict/plot
       .M1          = M1,
       .M02         = M02,
-      .covars      = covars
+      .covars      = covars,
+      .terms       = rhs_terms,
+      .xlevels     = rhs_xlev
     ),
     class = "wnpmle"
   )

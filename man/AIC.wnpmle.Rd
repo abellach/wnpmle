@@ -16,3 +16,6 @@
 \description{
 AIC for wnpmle objects
 }
+\value{
+A numeric scalar giving the AIC value.
+}

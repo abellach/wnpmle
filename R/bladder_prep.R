@@ -106,32 +106,3 @@ bladder_prep <- function(tau = 59) {
 
   mydata
 }
-
-
-#' Plot the estimated cumulative baseline mean function
-#'
-#' @param x A \code{wnpmle} object.
-#' @param conf_int Logical; plot pointwise 95\% confidence bands (default
-#'   \code{TRUE} if SE is available).
-#' @param xlab,ylab,main Axis labels and title.
-#' @param ... Additional arguments passed to \code{plot}.
-#' @export
-plot.wnpmle <- function(x, conf_int = !anyNA(x$se_Lambda),
-                         xlab = "Time",
-                         ylab = expression(hat(Lambda)(t)),
-                         main = "Estimated cumulative baseline mean",
-                         ...) {
-  t_obs  <- x$event_times
-  Lambda <- x$Lambda
-
-  plot(t_obs, Lambda, type = "s",
-       xlab = xlab, ylab = ylab, main = main, ...)
-
-  if (conf_int && !anyNA(x$se_Lambda)) {
-    lwr <- pmax(Lambda - 1.96 * x$se_Lambda, 0)
-    upr <- Lambda + 1.96 * x$se_Lambda
-    lines(t_obs, lwr, type = "s", lty = 2, col = "grey50")
-    lines(t_obs, upr, type = "s", lty = 2, col = "grey50")
-  }
-  invisible(x)
-}

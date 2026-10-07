@@ -11,7 +11,8 @@
 #'
 #' @references
 #' Bellach, A. and Kosorok, M.R. (2026). Weighted NPMLE for the marginal mean
-#' of recurrent events with a competing terminal event. \emph{JASA}, to appear.
+#' of recurrent events with a competing terminal event.
+#' \url{https://arxiv.org/abs/2605.25934}.
 #'
 #' @keywords internal
 "_PACKAGE"

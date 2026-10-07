@@ -14,3 +14,6 @@
 \description{
 Extract coefficients from a wnpmle object
 }
+\value{
+A named numeric vector of regression coefficients.
+}

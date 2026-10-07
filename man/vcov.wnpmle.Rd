@@ -11,6 +11,11 @@
 
 \item{...}{Ignored.}
 }
+\value{
+A numeric matrix containing the variance-covariance matrix for
+the regression coefficients and cumulative baseline mean function.
+Returns an error if \code{se = "none"} was used in \code{wnpmle_fit}.
+}
 \description{
 Returns the full variance-covariance matrix for (beta, Lambda).
 To get only the beta part, use \code{vcov(fit)[1:p, 1:p]}.

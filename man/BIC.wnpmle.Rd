@@ -14,3 +14,6 @@
 \description{
 BIC for wnpmle objects
 }
+\value{
+A numeric scalar giving the BIC value.
+}

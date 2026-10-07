@@ -14,3 +14,8 @@
 \description{
 Log-likelihood for wnpmle objects
 }
+\value{
+An object of class \code{"logLik"} with the log-likelihood value,
+degrees of freedom (\code{df}) equal to the number of regression
+coefficients, and number of observations (\code{nobs}).
+}

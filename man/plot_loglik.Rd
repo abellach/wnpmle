@@ -13,6 +13,8 @@ plot_loglik(
   tau = NULL,
   mark_points = TRUE,
   file = NULL,
+  width = 6,
+  height = 4.5,
   verbose = TRUE,
   ...
 )
@@ -34,12 +36,15 @@ plot_loglik(
 maximum observed time in the data.}
 
 \item{mark_points}{Logical; if \code{TRUE} (default), marks reference
-points at rho=1 (filled circle, Ghosh-Lin) and r=1 (open circle,
+points at rho=1 (open circle, Ghosh-Lin) and r=1 (filled circle,
 proportional odds model).}
 
 \item{file}{Optional path to save the plot as a PDF (e.g.
 \code{"loglik_profile.pdf"}). If \code{NULL} (default), plots to the
 current device.}
+
+\item{width, height}{Size of the PDF in inches (default 6 x 4.5); only used
+when \code{file} is given.}
 
 \item{verbose}{Logical; print progress (default \code{TRUE}).}
 
@@ -57,7 +62,7 @@ r is shown on the left (negative axis) and the Box-Cox parameter rho on
 the right (positive axis), meeting at zero where both models coincide.
 }
 \examples{
-\dontrun{
+\donttest{
 bdata <- bladder_prep()
 bdata_clean <- bdata[, c("id", "time", "status", "treat", "num", "size")]
 plot_loglik(Surv(time, status) ~ treat + num + size,

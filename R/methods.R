@@ -34,9 +34,17 @@ print.wnpmle <- function(x, ...) {
 #' @param tau_grid Logical; if \code{TRUE} (default), also show Lambda at
 #'   tau/4, tau/2, and tau.
 #' @param ... Ignored.
-#' @return Invisibly returns \code{object}.
+#' @return An object of class \code{summary.wnpmle}, printed with the
+#'   coefficient table and Lambda at tau/4, tau/2 and tau.
 #' @export
 summary.wnpmle <- function(object, tau_grid = TRUE, ...) {
+  structure(list(fit = object, tau_grid = tau_grid), class = "summary.wnpmle")
+}
+
+#' @export
+print.summary.wnpmle <- function(x, ...) {
+  object   <- x$fit
+  tau_grid <- x$tau_grid
   print(object)
 
   if (tau_grid) {
@@ -58,7 +66,7 @@ summary.wnpmle <- function(object, tau_grid = TRUE, ...) {
       print(tab)
     }
   }
-  invisible(object)
+  invisible(x)
 }
 
 
@@ -146,11 +154,13 @@ BIC.wnpmle <- function(object, ...) {
 #' @param tau Optional truncation time. If \code{NULL} (default), uses the
 #'   maximum observed time in the data.
 #' @param mark_points Logical; if \code{TRUE} (default), marks reference
-#'   points at rho=1 (filled circle, Ghosh-Lin) and r=1 (open circle,
+#'   points at rho=1 (open circle, Ghosh-Lin) and r=1 (filled circle,
 #'   proportional odds model).
 #' @param file Optional path to save the plot as a PDF (e.g.
 #'   \code{"loglik_profile.pdf"}). If \code{NULL} (default), plots to the
 #'   current device.
+#' @param width,height Size of the PDF in inches (default 6 x 4.5); only used
+#'   when \code{file} is given.
 #' @param verbose Logical; print progress (default \code{TRUE}).
 #' @param ... Additional arguments passed to \code{\link{wnpmle_fit}}.
 #'
@@ -171,6 +181,8 @@ plot_loglik <- function(formula, data, id = "id",
                         tau         = NULL,
                         mark_points = TRUE,
                         file        = NULL,
+                        width       = 6,
+                        height      = 4.5,
                         verbose     = TRUE,
                         ...) {
 
@@ -231,7 +243,7 @@ plot_loglik <- function(formula, data, id = "id",
   r_grid.new   <- c(0, r_grid)
 
   # ---- plot ----
-  if (!is.null(file)) pdf(file, width = 3.5, height = 3.5, useDingbats = FALSE)
+  if (!is.null(file)) pdf(file, width = width, height = height, useDingbats = FALSE)
 
   oldpar <- par(no.readonly = TRUE)
   on.exit(par(oldpar))
@@ -241,7 +253,7 @@ plot_loglik <- function(formula, data, id = "id",
   max_rho  <- ceiling(max(rho_grid.new) / 0.4) * 0.4
   xlim_all <- c(-max_r, max_rho)
 
-  par(mar = c(6, 5, 4, 2), mgp = c(1.25, 0.22, 0), tcl = -0.18)
+  par(mar = c(5, 4.5, 3, 3), mgp = c(2.5, 0.5, 0), tcl = -0.25)
 
   plot(NA, xlim = xlim_all, ylim = ylim_all,
        xlab = "", ylab = "Log-likelihood", axes = FALSE)
@@ -258,18 +270,24 @@ plot_loglik <- function(formula, data, id = "id",
   axis(2)
 
   mtext("Transformation parameter", side = 1, line = 3.5)
-  mtext("r",             side = 1, at = -0.7 * max_r,   line = 1.8)
-  mtext(expression(rho), side = 1, at =  0.7 * max_rho, line = 1.8)
+  mtext("r",             side = 1, at = -0.5 * max_r,   line = 2)
+  mtext(expression(rho), side = 1, at =  0.5 * max_rho, line = 2)
 
-  mtext("Logarithmic transformation", side = 3, at = -0.5 * max_r,   adj = 0.5, cex = 0.85, line = 1)
-  mtext("Box-Cox transformation",     side = 3, at =  0.5 * max_rho, adj = 0.5, cex = 0.85, line = 1)
+  mtext("Logarithmic", side = 3, at = -0.5 * max_r,   cex = 0.9, line = 0.5)
+  mtext("Box-Cox",     side = 3, at =  0.5 * max_rho, cex = 0.9, line = 0.5)
 
   if (mark_points) {
     i_r1   <- which.min(abs(r_grid.new   - 1))
     i_rho1 <- which.min(abs(rho_grid.new - 1))
 
+    # labels beside the points: "r = 1" to the right, "rho = 1" above,
+    # so that the curves do not run through them
     points(-r_grid.new[i_r1],    ll_log.new[i_r1],  pch = 16, cex = 1)
+    text(-r_grid.new[i_r1], ll_log.new[i_r1], labels = "r = 1",
+         pos = 4, offset = 0.7, xpd = NA)
     points(rho_grid.new[i_rho1], ll_BC.new[i_rho1], pch = 1,  cex = 1.5)
+    text(rho_grid.new[i_rho1], ll_BC.new[i_rho1], labels = expression(rho == 1),
+         pos = 3, offset = 0.9, xpd = NA)
   }
 
   if (!is.null(file)) {
@@ -383,19 +401,33 @@ plot.wnpmle <- function(x, conf_bands = TRUE, ...) {
 
 #' Predict marginal mean for new covariate values
 #'
+#' Evaluates the estimated marginal mean number of recurrent events,
+#' \eqn{\hat\mu(t \mid z) = G\{e^{\hat\beta^T z} \hat\Lambda(t)\}}, at new
+#' covariate values, with pointwise confidence limits.
+#'
 #' @param object A \code{wnpmle} object.
-#' @param newdata A data frame with the same covariates used in fitting.
+#' @param newdata A data frame with the same covariates used in fitting
+#'   (factors may be given as factors or character strings).
 #'   If \code{NULL}, returns the estimated Lambda(t) for the baseline
 #'   (all covariates = 0).
 #' @param times Time points at which to evaluate the marginal mean.
 #'   If \code{NULL}, uses the observed recurrent event times.
+#' @param conf_int Logical; if \code{TRUE} (default) and standard errors are
+#'   available, adds pointwise confidence limits.
+#' @param conf_level Confidence level (default 0.95).
 #' @param ... Ignored.
-#' @return A data frame with column \code{time} and one column per row of
-#'   \code{newdata} named \code{mu_1}, \code{mu_2}, etc. If \code{newdata}
-#'   is \code{NULL}, returns a single column named \code{mu} for the
-#'   baseline covariate profile.
+#'
+#' @details The confidence limits are computed with the delta method from the
+#'   estimated covariance matrix of \eqn{(\beta, \Lambda)} (\code{vcov(object)}),
+#'   on the log scale so that they stay positive.
+#'
+#' @return A data frame with column \code{time} and, for each row \code{i} of
+#'   \code{newdata}, columns \code{mu_i} and (if \code{conf_int}) \code{lower_i}
+#'   and \code{upper_i}; or columns \code{mu} (and \code{lower}, \code{upper})
+#'   for the baseline.
 #' @export
-predict.wnpmle <- function(object, newdata = NULL, times = NULL, ...) {
+predict.wnpmle <- function(object, newdata = NULL, times = NULL,
+                           conf_int = TRUE, conf_level = 0.95, ...) {
   Lambda <- object$Lambda
   t_obs  <- object$event_times
 
@@ -403,33 +435,71 @@ predict.wnpmle <- function(object, newdata = NULL, times = NULL, ...) {
 
   # interpolate Lambda at requested times (step function)
   Lambda_t <- stats::stepfun(t_obs, c(0, Lambda))(times)
+  k_t      <- findInterval(times, t_obs)          # index of Lambda used (0 = before first event)
+  zq       <- qnorm(1 - (1 - conf_level) / 2)
+  have_se  <- conf_int && !is.null(object$vcov) && !anyNA(object$vcov)
+  numcov   <- length(object$coefficients)
 
-  if (is.null(newdata)) {
-    return(data.frame(time = times, mu = Lambda_t))
+  log_ci <- function(mu, se) {
+    ratio <- ifelse(mu > 0, se / mu, 0)
+    list(lower = mu * exp(-zq * ratio), upper = mu * exp(zq * ratio))
   }
 
-  cov_mat <- model.matrix(
-    stats::as.formula(paste("~", paste(object$.covars, collapse = "+"))),
-    data = newdata
-  )[, -1, drop = FALSE]
+  if (is.null(newdata)) {
+    out <- data.frame(time = times, mu = Lambda_t)
+    if (have_se) {
+      se <- ifelse(k_t > 0, sqrt(pmax(diag(object$vcov)[numcov + pmax(k_t, 1)], 0)), 0)
+      ci <- log_ci(Lambda_t, se)
+      out$lower <- ci$lower
+      out$upper <- ci$upper
+    }
+    return(out)
+  }
+
+  if (!is.null(object$.terms)) {
+    # same coding as in the fit (factor levels, contrasts)
+    mf <- stats::model.frame(object$.terms, newdata, xlev = object$.xlevels)
+    cov_mat <- model.matrix(object$.terms, mf, xlev = object$.xlevels)[, -1, drop = FALSE]
+  } else {
+    # objects fitted with wnpmle <= 0.1.2
+    cov_mat <- model.matrix(
+      stats::as.formula(paste("~", paste(object$.covars, collapse = "+"))),
+      data = newdata
+    )[, -1, drop = FALSE]
+  }
 
   beta <- object$coefficients
-  out  <- data.frame(time = times)
-
-  for (i in seq_len(nrow(cov_mat))) {
-    eta <- as.numeric(cov_mat[i, ] %*% beta)
+  rho  <- object$rho
+  G  <- function(x) {
     if (object$model == "boxcox") {
-      rho <- object$rho
-      if (abs(rho) < 1e-10) {
-        mu_t <- exp(eta) * Lambda_t
-      } else {
-        mu_t <- ((1 + exp(eta) * Lambda_t)^rho - 1) / rho
-      }
-    } else {
-      r    <- object$rho
-      mu_t <- log(1 + r * exp(eta) * Lambda_t) / r
-    }
+      if (abs(rho) < 1e-10) log(1 + x) else ((1 + x)^rho - 1) / rho
+    } else log(1 + rho * x) / rho
+  }
+  dG <- function(x) {
+    if (object$model == "boxcox") (1 + x)^(rho - 1) else 1 / (1 + rho * x)
+  }
+
+  out <- data.frame(time = times)
+  for (i in seq_len(nrow(cov_mat))) {
+    zi   <- cov_mat[i, ]
+    e    <- exp(as.numeric(zi %*% beta))
+    x    <- e * Lambda_t
+    mu_t <- G(x)
     out[[paste0("mu_", i)]] <- mu_t
+
+    if (have_se) {
+      V  <- object$vcov
+      gp <- dG(x)
+      se <- numeric(length(times))
+      for (j in which(k_t > 0)) {
+        idx <- c(seq_len(numcov), numcov + k_t[j])
+        g   <- c(gp[j] * x[j] * zi, gp[j] * e)   # d mu / d(beta, Lambda(t))
+        se[j] <- sqrt(max(as.numeric(t(g) %*% V[idx, idx, drop = FALSE] %*% g), 0))
+      }
+      ci <- log_ci(mu_t, se)
+      out[[paste0("lower_", i)]] <- ci$lower
+      out[[paste0("upper_", i)]] <- ci$upper
+    }
   }
   out
 }

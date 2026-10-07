@@ -70,3 +70,20 @@ test_that("predict.wnpmle works for baseline and newdata", {
   pred1 <- predict(fit, newdata = newdat)
   expect_equal(ncol(pred1), 3)  # time + mu_1 + mu_2
 })
+
+test_that("sandwich standard errors are finite for both models", {
+  skip_on_cran()   # compiles four extra TMB templates; too slow for CRAN checks
+  skip_if_not_installed("survival")
+  skip_if_not_installed("TMB")
+
+  bdata <- bladder_prep()
+  for (m in c("boxcox", "log")) {
+    for (s in c("sandwich", "sandwich_adj")) {
+      fit <- wnpmle_fit(Surv(time, status) ~ treat + num + size,
+                        data = bdata, id = "id", model = m, rho = 1, se = s)
+      expect_true(all(is.finite(fit$se)))
+      expect_true(all(fit$se > 0))
+    }
+  }
+})
+

@@ -28,7 +28,7 @@ Lambda(t) and its increments lambda(t), together with standard errors and
 pointwise 95\% confidence intervals.
 }
 \examples{
-\dontrun{
+\donttest{
 bdata <- bladder_prep()
 bdata_clean <- bdata[, c("id", "time", "status", "treat", "num", "size")]
 fit <- wnpmle_fit(Surv(time, status) ~ treat + num + size,
