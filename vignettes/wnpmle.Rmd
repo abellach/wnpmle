@@ -288,14 +288,14 @@ are fast also for larger data sets.
 
 ## References
 
-Bellach, A. and Kosorok, M.R. (2026). Weighted NPMLE for the marginal mean of recurrent events with a competing terminal event. *arXiv preprint* [arXiv:2605.25934](https://arxiv.org/abs/2605.25934).
+Bellach, A. and Kosorok, M.R. (2026). Weighted NPMLE for the marginal mean of recurrent events with a competing terminal event. *arXiv preprint* arXiv:2605.25934. [doi:10.48550/arXiv.2605.25934](https://doi.org/10.48550/arXiv.2605.25934).
 
 Bellach, A., Kosorok, M.R., Rüschendorf, L. and Fine, J.P. (2019). Weighted NPMLE for the subdistribution of a competing risk. *Journal of the American Statistical Association*, 114(525), 259–270. [doi:10.1080/01621459.2017.1401540](https://doi.org/10.1080/01621459.2017.1401540).
 
 Ghosh, D. and Lin, D.Y. (2002). Marginal regression models for recurrent and terminal events. *Statistica Sinica*, 12, 663–688. [doi:10.17615/pt0g-y207](https://doi.org/10.17615/pt0g-y207).
 
-Gonzalez, J.R., Fernandez, E., Moreno, V., Ribes, J., Peris, M., Navarro, M., Cambray, M. and Borras, J.M. (2005). Sex differences in hospital readmission among colorectal cancer patients. *Journal of Epidemiology and Community Health*, 59(6), 506–511.
+Gonzalez, J.R., Fernandez, E., Moreno, V., Ribes, J., Peris, M., Navarro, M., Cambray, M. and Borras, J.M. (2005). Sex differences in hospital readmission among colorectal cancer patients. *Journal of Epidemiology and Community Health*, 59(6), 506–511. [doi:10.1136/jech.2004.028902](https://doi.org/10.1136/jech.2004.028902).
 
-Król, A., Mauguen, A., Mazroui, Y., Laurent, A., Michiels, S. and Rondeau, V. (2017). Tutorial in joint modeling and prediction: a statistical software for correlated longitudinal outcomes, recurrent events and a terminal event. *Journal of Statistical Software*, 81(3), 1–52.
+Król, A., Mauguen, A., Mazroui, Y., Laurent, A., Michiels, S. and Rondeau, V. (2017). Tutorial in joint modeling and prediction: a statistical software for correlated longitudinal outcomes, recurrent events and a terminal event. *Journal of Statistical Software*, 81(3), 1–52. [doi:10.18637/jss.v081.i03](https://doi.org/10.18637/jss.v081.i03).
 
 Zeng, D. and Lin, D.Y. (2006). Semiparametric transformation models with random effects for recurrent events. *Biometrika*, 93(3), 627–640. [doi:10.1093/biomet/93.3.627](https://doi.org/10.1093/biomet/93.3.627).

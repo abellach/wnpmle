@@ -29,7 +29,9 @@
   result of `summary()` showed the coefficients twice).
 * `plot_loglik()`: wider default PDF (`width`, `height` arguments), titles no
   longer overlap, and the points rho = 1 and r = 1 are labelled.
-* Documentation: `"sandwich_adj"` is listed as the default for `se`.
+* Documentation: `"sandwich_adj"` is listed as the default for `se`; references now
+  cite the arXiv preprint of Bellach and Kosorok (2026) with its DOI, and DOIs
+  were added to all references where available.
 
 # wnpmle 0.1.2
 

@@ -117,9 +117,9 @@ function correction for the Kaplan-Meier censoring weight estimation.
 \references{
 Bellach, A. and Kosorok, M.R. (2026). Weighted NPMLE for the marginal mean
 of recurrent events with a competing terminal event.
-\emph{arXiv preprint} arXiv:2605.25934.
+\emph{arXiv preprint} arXiv:2605.25934. \doi{10.48550/arXiv.2605.25934}
 
 Bellach, A., Kosorok, M.R., Ruschendorf, L. and Fine, J.P. (2019). Weighted NPMLE for the
 subdistribution of a competing risk. \emph{Journal of the American
-Statistical Association}, 114(525), 259-270.
+Statistical Association}, 114(525), 259-270. \doi{10.1080/01621459.2017.1401540}
 }

@@ -12,7 +12,7 @@
 #' @references
 #' Bellach, A. and Kosorok, M.R. (2026). Weighted NPMLE for the marginal mean
 #' of recurrent events with a competing terminal event.
-#' \url{https://arxiv.org/abs/2605.25934}.
+#' \emph{arXiv preprint} arXiv:2605.25934. \doi{10.48550/arXiv.2605.25934}
 #'
 #' @keywords internal
 "_PACKAGE"

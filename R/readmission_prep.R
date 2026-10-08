@@ -38,7 +38,7 @@
 #' Gonzalez, J.R., Fernandez, E., Moreno, V., Ribes, J., Peris, M., Navarro, M.,
 #' Cambray, M. and Borras, J.M. (2005). Sex differences in hospital readmission
 #' among colorectal cancer patients. \emph{Journal of Epidemiology and
-#' Community Health}, 59(6), 506-511.
+#' Community Health}, 59(6), 506-511. \doi{10.1136/jech.2004.028902}
 #'
 #' @examples
 #' rdata <- readmission_prep()

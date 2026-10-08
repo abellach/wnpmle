@@ -18,7 +18,8 @@ The main user-facing function is \code{\link{wnpmle_fit}}.
 }
 \references{
 Bellach, A. and Kosorok, M.R. (2026). Weighted NPMLE for the marginal mean
-of recurrent events with a competing terminal event. \emph{JASA}, to appear.
+of recurrent events with a competing terminal event.
+\emph{arXiv preprint} arXiv:2605.25934. \doi{10.48550/arXiv.2605.25934}
 }
 \seealso{
 Useful links:
