@@ -1,0 +1,39 @@
+name: Track GitHub Traffic
+
+on:
+  schedule:
+    - cron: '0 0 * * 0' # Runs every Sunday at midnight UTC
+  workflow_dispatch: # Allows you to run it manually anytime
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch Clone Traffic
+        run: |
+          # Fetch cloning metrics using the built-in system token
+          RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://github.com")
+          
+          COUNT=$(echo "$RESPONSE" | grep -m 1 '"count":' | sed 's/[^0-9]//g')
+          UNIQUES=$(echo "$RESPONSE" | grep -m 1 '"uniques":' | sed 's/[^0-9]//g')
+          DATE=$(date +%Y-%m-%d)
+          
+          # Initialize CSV if it does not exist
+          if [ ! -f github_traffic.csv ]; then
+            echo "Date,Total_Clones_Last_14_Days,Unique_Users_Last_14_Days" > github_traffic.csv
+          fi
+          
+          # Append new stats
+          echo "$DATE,$COUNT,$UNIQUES" >> github_traffic.csv
+
+      - name: Commit and Push changes
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          git add github_traffic.csv
+          git commit -m "Automated update: GitHub clone traffic stats for $DATE" || exit 0
+          git push
