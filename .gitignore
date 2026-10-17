@@ -11,3 +11,6 @@ src/*.dll
 /doc/
 /Meta/
 inst/doc/
+..Rcheck/
+wnpmle.Rcheck/
+wnpmle_*.tar.gz
