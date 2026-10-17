@@ -72,7 +72,6 @@ test_that("predict.wnpmle works for baseline and newdata", {
 })
 
 test_that("sandwich standard errors are finite for both models", {
-  skip_on_cran()   # compiles four extra TMB templates; too slow for CRAN checks
   skip_if_not_installed("survival")
   skip_if_not_installed("TMB")
 
@@ -87,3 +86,14 @@ test_that("sandwich standard errors are finite for both models", {
   }
 })
 
+test_that("bladder results are unchanged (Box-Cox rho = 1, tau = 59)", {
+  skip_if_not_installed("survival")
+  skip_if_not_installed("TMB")
+
+  # Reference values from wnpmle 0.1.3 (vignette comparison with Ghosh-Lin).
+  bdata <- bladder_prep()
+  fit <- wnpmle_fit(Surv(time, status) ~ treat + num + size,
+                    data = bdata, id = "id", model = "boxcox", rho = 1, tau = 59)
+  expect_true(all(abs(unname(fit$coefficients) - c(-0.536, 0.173, -0.005)) < 1e-3))
+  expect_true(all(abs(unname(fit$se)           - c( 0.268, 0.059,  0.068)) < 1e-3))
+})

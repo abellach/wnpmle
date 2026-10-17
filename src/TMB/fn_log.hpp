@@ -1,8 +1,17 @@
-#define TMB_LIB_INIT R_init_fn_log_tmb
-#include <TMB.hpp>
+// Model "fn_log" of the wnpmle library. Called from src/wnpmle.cpp when the
+// data list passed to MakeADFun() contains model = "fn_log".
+// The code between the two marker lines is the original stand-alone
+// template; only its first line was changed (objective_function -> model).
+#ifndef FN_LOG_HPP
+#define FN_LOG_HPP
 
+#undef TMB_OBJECTIVE_PTR
+#define TMB_OBJECTIVE_PTR obj
+
+namespace wnpmle_fn_log {
+// ---- original template begins ----
 template<class Type>
-Type objective_function<Type>::operator()()
+Type model(objective_function<Type>* obj)
 {
   DATA_MATRIX(cov1);
   DATA_MATRIX(cov2);
@@ -66,3 +75,10 @@ Type objective_function<Type>::operator()()
   ADREPORT(beta); ADREPORT(alpha); ADREPORT(lambda); ADREPORT(Lambda);
   return nll;
 }
+// ---- original template ends ----
+} // namespace wnpmle_fn_log
+
+#undef TMB_OBJECTIVE_PTR
+#define TMB_OBJECTIVE_PTR this
+
+#endif

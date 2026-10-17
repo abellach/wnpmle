@@ -15,6 +15,7 @@
 #' \emph{arXiv preprint} arXiv:2605.25934. \doi{10.48550/arXiv.2605.25934}
 #'
 #' @keywords internal
+#' @useDynLib wnpmle, .registration = TRUE
 "_PACKAGE"
 
 ## usethis namespace: start

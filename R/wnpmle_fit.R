@@ -248,9 +248,9 @@ wnpmle_fit <- function(formula,
 
   # ---- 7. TMB data and parameters ----
   rho_val  <- as.numeric(rho)
-  dll_name <- .wnpmle_compile_tmb_if_needed(model, silent = silent)
 
   data_tmb <- list(
+    model = .wnpmle_tmb_model(model, part = "fit"),
     cov1  = cov1,
     cov2  = cov2,
     cov02 = cov02,
@@ -272,7 +272,7 @@ wnpmle_fit <- function(formula,
   )
 
   # ---- 8. Fit ----
-  obj <- TMB::MakeADFun(data_tmb, parameters, DLL = dll_name, silent = silent)
+  obj <- TMB::MakeADFun(data_tmb, parameters, DLL = "wnpmle", silent = silent)
   opt <- nlminb(obj$par, obj$fn, obj$gr, control = control)
 
   est        <- obj$env$parList(opt$par)

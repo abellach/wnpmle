@@ -235,43 +235,16 @@
   psi_subj
 }
 
-# Folder for the compiled TMB templates.
-# - options(wnpmle.cache_dir = "...") or the environment variable
-#   WNPMLE_CACHE_DIR: use that folder (e.g. on a cluster, so that all jobs
-#   share one compiled copy).
-# - interactive sessions: tools::R_user_dir("wnpmle", "cache"), so the
-#   templates are compiled only once per installed version of wnpmle and TMB.
-#   Folders from older versions are removed.
-# - otherwise (e.g. R CMD check): a folder in tempdir(), removed with the session.
-.wnpmle_tmb_dir <- function() {
-  user_dir <- getOption("wnpmle.cache_dir", Sys.getenv("WNPMLE_CACHE_DIR", ""))
-  version_tag <- paste0("wnpmle", utils::packageVersion("wnpmle"),
-                        "_TMB", utils::packageVersion("TMB"))
-  if (nzchar(user_dir)) {
-    dir <- file.path(path.expand(user_dir), version_tag)
-  } else if (interactive()) {
-    base <- tools::R_user_dir("wnpmle", which = "cache")
-    dir  <- file.path(base, version_tag)
-    if (dir.exists(base)) {
-      old <- setdiff(list.dirs(base, recursive = FALSE), dir)
-      if (length(old)) unlink(old, recursive = TRUE)
-    }
-  } else {
-    dir <- file.path(tempdir(), "wnpmle_tmb")
-  }
-  if (!dir.exists(dir)) dir.create(dir, recursive = TRUE, showWarnings = FALSE)
-  dir
-}
-
-# Compile and load the TMB template needed for the requested model.
-# The package ships the .cpp templates in inst/tmb and compiles them lazily
-# (see .wnpmle_tmb_dir() for where), avoiding compilation during library(wnpmle).
+# Name of the TMB model for the requested part, as listed in src/wnpmle.cpp
+# and src/TMB/README.md. All models are compiled into the package's own
+# library ("wnpmle") when the package is installed; nothing is compiled at run
+# time. The name is passed to MakeADFun() as data$model, with DLL = "wnpmle".
 # part = "fit" (likelihood), "score" (subject-wise scores) or
 # "corr" (censoring correction).
-.wnpmle_compile_tmb_if_needed <- function(model, silent = TRUE, part = "fit") {
+.wnpmle_tmb_model <- function(model, part = "fit") {
   suffix <- switch(model,
-    boxcox = "BC_tmb",
-    log    = "log_tmb",
+    boxcox = "BC",
+    log    = "log",
     stop("Unknown model: ", model, call. = FALSE)
   )
   prefix <- switch(part,
@@ -280,64 +253,43 @@
     corr  = "corr_",
     stop("Unknown part: ", part, call. = FALSE)
   )
-  dll_base <- paste0(prefix, suffix)
-  cpp_name <- paste0(dll_base, ".cpp")
-  cpp_src <- system.file("tmb", cpp_name, package = "wnpmle", mustWork = TRUE)
-
-  build_dir <- .wnpmle_tmb_dir()
-
-  cpp_tmp <- file.path(build_dir, cpp_name)
-  dll_tmp <- TMB::dynlib(file.path(build_dir, dll_base))
-
-  if (!file.exists(dll_tmp) || file.info(dll_tmp)$mtime < file.info(cpp_src)$mtime) {
-    file.copy(cpp_src, cpp_tmp, overwrite = TRUE)
-    oldwd <- getwd()
-    on.exit(setwd(oldwd), add = TRUE)
-    setwd(build_dir)
-    TMB::compile(cpp_name, silent = silent)
-  }
-
-  if (!dll_base %in% names(getLoadedDLLs())) {
-    dyn.load(dll_tmp)
-  }
-
-  dll_base
+  paste0(prefix, suffix)
 }
 
 
-# ---- Score contributions via TMB (score_BC_tmb.cpp / score_log_tmb.cpp) ----
+# ---- Score contributions via TMB (src/TMB/score_BC.hpp, score_log.hpp) ----
 # Returns the numi x (numcov + num1) matrix of subject-wise derivatives of the
 # negative log-likelihood with respect to (beta, lambda); identical to
 # .compute_score() (checked to 1e-13).
 .compute_score_tmb <- function(model, data_tmb, parameters, par_hat,
                                numcov, num1, numi, lambda, M1, M2, M02,
                                silent = TRUE) {
-  dll <- .wnpmle_compile_tmb_if_needed(model, silent = silent, part = "score")
   d <- data_tmb
+  d$model <- .wnpmle_tmb_model(model, part = "score")
   d$id1  <- as.integer(M1$id  - 1L)
   d$id02 <- as.integer(M02$id - 1L)
   d$id2  <- as.integer(M2$id  - 1L)
   d$numi <- as.integer(numi)
-  obj <- TMB::MakeADFun(d, parameters, DLL = dll, ADreport = TRUE, silent = silent)
+  obj <- TMB::MakeADFun(d, parameters, DLL = "wnpmle", ADreport = TRUE, silent = silent)
   J <- obj$gr(par_hat)                                  # wrt (beta, alpha)
   idx <- numcov + seq_len(num1)
   J[, idx] <- sweep(J[, idx, drop = FALSE], 2, lambda, "/")   # alpha -> lambda
   J
 }
 
-# ---- Censoring correction via TMB (corr_BC_tmb.cpp / corr_log_tmb.cpp) ----
+# ---- Censoring correction via TMB (src/TMB/corr_BC.hpp, corr_log.hpp) ----
 # Returns psi_subj (numi x (numcov + num1)) with the same sign as
 # .censoring_correction(); it enters the meat as  gradi - psi_subj.
 .censoring_correction_tmb <- function(model, data_tmb, parameters, par_hat,
                                       numi, M1, M2, M02, silent = TRUE) {
-  dll <- .wnpmle_compile_tmb_if_needed(model, silent = silent, part = "corr")
   d <- data_tmb
+  d$model <- .wnpmle_tmb_model(model, part = "corr")
   d$ind1     <- as.integer(M1$ind)
   d$ind2     <- as.integer(M2$ind)
   d$ind02    <- as.integer(M02$ind)
   d$status02 <- as.integer(M02$status0)
   d$id02     <- as.integer(M02$id - 1L)
   d$numi     <- as.integer(numi)
-  obj <- TMB::MakeADFun(d, parameters, DLL = dll, silent = silent)
+  obj <- TMB::MakeADFun(d, parameters, DLL = "wnpmle", silent = silent)
   obj$report(par_hat)$psi_subj
 }

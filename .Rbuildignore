@@ -8,5 +8,6 @@
 ^wnpmle_.*\.tar\.gz$
 ^wnpmle\.md$
 ^figure$
-^inst/tmb/.*\.dll$
-^inst/tmb/.*\.o$
+^src/.*\.o$
+^src/.*\.so$
+^src/.*\.dll$

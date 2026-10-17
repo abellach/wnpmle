@@ -1,7 +1,7 @@
 Package: wnpmle
 Title: Weighted NPMLE for Recurrent Events with a Competing Terminal
         Event
-Version: 0.1.3
+Version: 0.1.3.9000
 Authors@R: 
     person("Anna", "Bellach",
            email = "abellach.biostat@gmail.com",
@@ -26,7 +26,8 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Depends: R (>= 4.1.0)
-Imports: TMB (>= 1.9.0), survival, methods, MASS, graphics, grDevices, tools, utils
+Imports: TMB (>= 1.9.0), survival, methods, MASS, graphics, grDevices, utils
+LinkingTo: TMB, RcppEigen
 Suggests: testthat (>= 3.0.0), knitr, rmarkdown
 Config/testthat/edition: 3
 VignetteBuilder: knitr

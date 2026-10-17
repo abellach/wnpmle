@@ -26,11 +26,21 @@
 //   id2  (num2): subject of each terminal row, 0-based (M2$id - 1)
 //   numi:        number of subjects
 //
-#define TMB_LIB_INIT R_init_score_BC_tmb
-#include <TMB.hpp>
+//
+// Model "score_BC" of the wnpmle library. Called from src/wnpmle.cpp when the
+// data list passed to MakeADFun() contains model = "score_BC".
+// The code between the two marker lines is the original stand-alone
+// template; only its first line was changed (objective_function -> model).
+#ifndef SCORE_BC_HPP
+#define SCORE_BC_HPP
 
+#undef TMB_OBJECTIVE_PTR
+#define TMB_OBJECTIVE_PTR obj
+
+namespace wnpmle_score_BC {
+// ---- original template begins ----
 template<class Type>
-Type objective_function<Type>::operator()()
+Type model(objective_function<Type>* obj)
 {
   DATA_MATRIX(cov1);
   DATA_MATRIX(cov2);
@@ -107,3 +117,10 @@ Type objective_function<Type>::operator()()
   ADREPORT(nll_i);
   return nll;
 }
+// ---- original template ends ----
+} // namespace wnpmle_score_BC
+
+#undef TMB_OBJECTIVE_PTR
+#define TMB_OBJECTIVE_PTR this
+
+#endif

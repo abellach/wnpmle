@@ -1,3 +1,14 @@
+# wnpmle (development version)
+
+* The TMB models are now compiled once, when the package is installed, instead
+  of at the first call of `wnpmle_fit()`. The first call is therefore as fast as
+  later ones, and on Windows and macOS the CRAN binary packages need no
+  compiler (Rtools / Xcode). The option `wnpmle.cache_dir` and the environment
+  variable `WNPMLE_CACHE_DIR` are no longer needed and are ignored.
+* Internally, each model is kept in its own file in `src/TMB/` (listed in
+  `src/TMB/README.md`); `src/wnpmle.cpp` connects the model names to these
+  files. Results are unchanged.
+
 # wnpmle 0.1.3
 
 * The censoring-corrected sandwich variance (`se = "sandwich_adj"`, the

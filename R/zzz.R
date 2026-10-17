@@ -1,2 +1,2 @@
-# TMB templates are compiled lazily in wnpmle_fit(), not during package load.
-# This keeps library(wnpmle) lightweight and avoids runtime compilation in .onLoad().
+# All TMB models are compiled into the package library when the package is
+# installed (src/wnpmle.cpp and src/TMB/); nothing is compiled at run time.
