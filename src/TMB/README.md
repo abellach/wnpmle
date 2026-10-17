@@ -8,7 +8,8 @@ connects the model names to the files. In R, a model is used as
 TMB::MakeADFun(data = list(model = "<name>", ...), parameters, DLL = "wnpmle")
 ```
 
-and the name is chosen by `.wnpmle_tmb_model()` in `R/helpers.R`.
+and the name is chosen by `.wnpmle_tmb_model()` in `R/helpers.R` (recurrent
+events) or `.wnpmle_tmb_model_cmprsk()` in `R/cmprsk_fit.R` (competing risks).
 
 | Name | File | Data | Model | Computes | Used by |
 |---|---|---|---|---|---|
@@ -18,6 +19,12 @@ and the name is chosen by `.wnpmle_tmb_model()` in `R/helpers.R`.
 | `score_log` | `score_log.hpp` | recurrent events | logarithmic | subject-wise scores (plain sandwich) | `.compute_score_tmb()` |
 | `corr_BC` | `corr_BC.hpp` | recurrent events | Box-Cox | censoring correction psi (`sandwich_adj`) | `.censoring_correction_tmb()` |
 | `corr_log` | `corr_log.hpp` | recurrent events | logarithmic | censoring correction psi (`sandwich_adj`) | `.censoring_correction_tmb()` |
+| `fn_cmprsk_BC` | `fn_cmprsk_BC.hpp` | competing risks | Box-Cox (`rho`) | negative log-likelihood; estimates and inverse Fisher | `.wnpmle_fit_cmprsk()` |
+| `fn_cmprsk_log` | `fn_cmprsk_log.hpp` | competing risks | logarithmic (`r`) | negative log-likelihood; estimates and inverse Fisher | `.wnpmle_fit_cmprsk()` |
+| `score_cmprsk_BC` | `score_cmprsk_BC.hpp` | competing risks | Box-Cox | subject-wise scores (plain sandwich) | `.wnpmle_fit_cmprsk()` |
+| `score_cmprsk_log` | `score_cmprsk_log.hpp` | competing risks | logarithmic | subject-wise scores (plain sandwich) | `.wnpmle_fit_cmprsk()` |
+| `corr_cmprsk_BC` | `corr_cmprsk_BC.hpp` | competing risks | Box-Cox | censoring correction psi (`sandwich_adj`) | `.wnpmle_fit_cmprsk()` |
+| `corr_cmprsk_log` | `corr_cmprsk_log.hpp` | competing risks | logarithmic | censoring correction psi (`sandwich_adj`) | `.wnpmle_fit_cmprsk()` |
 
 ## How a model file is built
 

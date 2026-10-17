@@ -19,6 +19,14 @@
 #include "TMB/corr_BC.hpp"
 #include "TMB/corr_log.hpp"
 
+// competing risks
+#include "TMB/fn_cmprsk_BC.hpp"
+#include "TMB/fn_cmprsk_log.hpp"
+#include "TMB/score_cmprsk_BC.hpp"
+#include "TMB/score_cmprsk_log.hpp"
+#include "TMB/corr_cmprsk_BC.hpp"
+#include "TMB/corr_cmprsk_log.hpp"
+
 template<class Type>
 Type objective_function<Type>::operator()()
 {
@@ -29,6 +37,12 @@ Type objective_function<Type>::operator()()
   if (model == "score_log") return wnpmle_score_log::model(this);
   if (model == "corr_BC")   return wnpmle_corr_BC::model(this);
   if (model == "corr_log")  return wnpmle_corr_log::model(this);
+  if (model == "fn_cmprsk_BC")     return wnpmle_fn_cmprsk_BC::model(this);
+  if (model == "fn_cmprsk_log")    return wnpmle_fn_cmprsk_log::model(this);
+  if (model == "score_cmprsk_BC")  return wnpmle_score_cmprsk_BC::model(this);
+  if (model == "score_cmprsk_log") return wnpmle_score_cmprsk_log::model(this);
+  if (model == "corr_cmprsk_BC")   return wnpmle_corr_cmprsk_BC::model(this);
+  if (model == "corr_cmprsk_log")  return wnpmle_corr_cmprsk_log::model(this);
   error("wnpmle: unknown TMB model");
   return Type(0);
 }

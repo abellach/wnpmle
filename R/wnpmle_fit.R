@@ -2,21 +2,25 @@
 #'
 #' Estimates the weighted nonparametric maximum likelihood estimator (wNPMLE)
 #' for the marginal mean function of recurrent events in the presence of a
-#' competing terminal event. Two transformation models are supported:
-#' the Box-Cox model and the logarithmic model.
+#' competing terminal event (\code{type = "recurrent"}), or for the
+#' subdistribution of a competing risk (\code{type = "cmprsk"}). Two
+#' transformation models are supported: the Box-Cox model and the logarithmic
+#' model.
 #'
 #' @param formula A formula of the form \code{Surv(time, status) ~ covariates},
-#'   where \code{status} takes value \code{1} for a recurrent event,
-#'   \code{2} for the terminal event (e.g. death), and \code{0} for censoring.
+#'   where \code{status} takes value \code{1} for a recurrent event
+#'   (\code{type = "cmprsk"}: the event of interest), \code{2} for the
+#'   terminal event (\code{type = "cmprsk"}: the competing event), and
+#'   \code{0} for censoring.
 #' @param data A data frame containing the variables in \code{formula} and
 #'   an \code{id} column identifying subjects.
 #' @param id Name of the subject identifier column in \code{data}
 #'   (default: \code{"id"}).
-#' @param type Type of analysis. Currently only \code{"recurrent"} is
-#'   supported (recurrent events with a competing terminal event).
-#'   Future versions will add \code{"cmprsk"} (competing risks)
-#'   and \code{"cmprsk_ltrc"} (competing risks with left truncation
-#'   and right censoring).
+#' @param type Type of analysis: \code{"recurrent"} (default; recurrent
+#'   events with a competing terminal event, one or more rows per subject) or
+#'   \code{"cmprsk"} (competing risks, one row per subject). A future version
+#'   will add \code{"cmprsk_ltrc"} (competing risks with left truncation and
+#'   right censoring).
 #' @param model Transformation model: \code{"boxcox"} (default) or
 #'   \code{"log"}.
 #' @param rho Transformation parameter. For \code{model = "boxcox"}, this is
@@ -52,11 +56,17 @@
 #'   \item{call}{The matched call.}
 #'
 #' @details
-#' **Analysis types:** Currently only \code{type = "recurrent"} is implemented,
-#' for the recurrent events with competing terminal event setting. Support for
-#' \code{"cmprsk"} (Bellach, Kosorok, Rüschendorf and Fine, 2019) and
-#' \code{"cmprsk_ltrc"} (left truncation and right censoring) will be
-#' added in future versions.
+#' **Analysis types:** \code{type = "recurrent"} models the marginal mean
+#' \eqn{\mu(t \mid z) = G\{e^{\beta^T z}\Lambda(t)\}} of recurrent events with a
+#' competing terminal event (Bellach and Kosorok, 2026).
+#' \code{type = "cmprsk"} models the cumulative incidence of the event of
+#' interest, \eqn{F_1(t \mid z) = 1 - \exp[-G\{e^{\beta^T z}\Lambda(t)\}]}
+#' (Bellach, Kosorok, Rüschendorf and Fine, 2019); \eqn{\rho = 1} in the
+#' Box-Cox model is the Fine-Gray model. For \code{type = "cmprsk"}, subjects
+#' observed beyond \code{tau}, and the last subjects once the Kaplan-Meier
+#' estimate of the censoring distribution drops below 0.05, are censored just
+#' after \code{tau}; the result has class \code{c("wnpmle_cmprsk", "wnpmle")},
+#' and \code{predict()} returns cumulative incidences.
 #'
 #' **Transformation models:** The two models differ in the link function \eqn{G}:
 #' \itemize{
@@ -111,12 +121,12 @@ wnpmle_fit <- function(formula,
   model <- match.arg(model)
   se    <- match.arg(se)
 
-  if (type != "recurrent") {
-    stop(
-      "type = \"", type, "\" is not yet implemented.\n",
-      "Currently only type = \"recurrent\" is supported.\n",
-      "Support for competing risks will be added in a future version."
-    )
+  if (type == "cmprsk") {
+    return(.wnpmle_fit_cmprsk(formula, data, id, model, rho, tau, se,
+                              init_beta, control, silent, cl))
+  }
+  if (type == "cmprsk_ltrc") {
+    stop("type = \"cmprsk_ltrc\" is not yet implemented.")
   }
 
   # ---- 1. Parse formula and data ----

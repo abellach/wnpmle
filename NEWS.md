@@ -1,5 +1,11 @@
 # wnpmle (development version)
 
+* New: competing risks, `wnpmle_fit(..., type = "cmprsk")`. Weighted NPMLE
+  for the subdistribution of a competing risk (Bellach, Kosorok, Rüschendorf
+  and Fine, 2019) in the Box-Cox and logarithmic transformation models
+  (Box-Cox with `rho = 1` is the Fine-Gray model), with inverse-Fisher,
+  sandwich and censoring-corrected sandwich standard errors. `predict()`
+  returns cumulative incidences with confidence limits.
 * The TMB models are now compiled once, when the package is installed, instead
   of at the first call of `wnpmle_fit()`. The first call is therefore as fast as
   later ones, and on Windows and macOS the CRAN binary packages need no
