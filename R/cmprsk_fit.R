@@ -106,7 +106,7 @@
   parameters <- list(beta = beta_init, alpha = prep$salpha)
 
   obj <- TMB::MakeADFun(dat, parameters, DLL = "wnpmle", silent = silent)
-  opt <- nlminb(obj$par, obj$fn, obj$gr, obj$he, control = control)
+  opt <- nlminb(obj$par, obj$fn, obj$gr, control = control)
   if (opt$convergence != 0) warning("nlminb: ", opt$message)
 
   beta_hat   <- opt$par[seq_len(numcov)]
