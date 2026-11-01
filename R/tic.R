@@ -23,12 +23,15 @@
 #'   fitted with \code{se = "fisher"}. If \code{NULL} (default), the model is
 #'   refitted with \code{se = "fisher"}; this requires that the data used in
 #'   the original call are still available.
+#' @param details Logical; if \code{TRUE}, also return the penalty, the number
+#'   of parameters, AIC and the log-likelihood (default \code{FALSE}).
 #' @param ... Ignored.
 #'
-#' @return A numeric scalar giving the TIC value, with attributes
-#'   \code{penalty} (the trace \eqn{\mathrm{tr}(\mathcal{I}_n^{-1}\widehat\Sigma_n)}),
-#'   \code{p} (the number of parameters, including the baseline jumps),
-#'   \code{AIC} (\eqn{-2\ell + 2p} with this \code{p}) and \code{loglik}.
+#' @return A numeric scalar giving the TIC value. With \code{details = TRUE},
+#'   a named vector with \code{TIC}, \code{penalty} (the trace
+#'   \eqn{\mathrm{tr}(\mathcal{I}_n^{-1}\widehat\Sigma_n)}), \code{p} (the
+#'   number of parameters, including the baseline jumps), \code{AIC}
+#'   (\eqn{-2\ell + 2p} with this \code{p}) and \code{loglik}.
 #'
 #' @details
 #' For a correctly specified model with a genuine likelihood the penalty
@@ -57,7 +60,7 @@
 #'   fit <- wnpmle_fit(Surv(time, status) ~ treat + num + size, data = dat,
 #'                     id = "id", model = "boxcox", rho = 1)
 #'   TIC(fit)
-#'   attributes(TIC(fit))
+#'   TIC(fit, details = TRUE)
 #' }
 #'
 #' @export
@@ -65,7 +68,7 @@ TIC <- function(object, ...) UseMethod("TIC")
 
 #' @rdname TIC
 #' @export
-TIC.wnpmle <- function(object, fisher = NULL, ...) {
+TIC.wnpmle <- function(object, fisher = NULL, details = FALSE, ...) {
   se_used <- object$call$se
   if (is.null(se_used)) se_used <- "sandwich_adj"
   if (!se_used %in% c("sandwich_adj", "sandwich"))
@@ -93,13 +96,12 @@ TIC.wnpmle <- function(object, fisher = NULL, ...) {
                         NA_real_
                       })
   p   <- nrow(Vs)
-  out <- -2 * object$loglik + 2 * penalty
-  attr(out, "penalty") <- penalty
-  attr(out, "p")       <- p
-  attr(out, "AIC")     <- -2 * object$loglik + 2 * p
-  attr(out, "loglik")  <- object$loglik
+  tic <- -2 * object$loglik + 2 * penalty
   if (is.finite(penalty) && penalty > 1.2 * p)
     warning(sprintf("TIC penalty (%.1f) clearly exceeds p (%d); check the variance estimate.",
                     penalty, p))
-  out
+  if (details)
+    return(c(TIC = tic, penalty = penalty, p = p,
+             AIC = -2 * object$loglik + 2 * p, loglik = object$loglik))
+  tic
 }
