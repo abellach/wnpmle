@@ -120,7 +120,7 @@ logLik.wnpmle <- function(object, ...) {
 #' @return A numeric scalar giving the AIC value.
 #' @export
 AIC.wnpmle <- function(object, ..., k = 2) {
-  p <- length(object$coefficients)
+  p <- length(object$coefficients) + length(object$lambda)
   -2 * object$loglik + k * p
 }
 
@@ -131,10 +131,9 @@ AIC.wnpmle <- function(object, ..., k = 2) {
 #' @return A numeric scalar giving the BIC value.
 #' @export
 BIC.wnpmle <- function(object, ...) {
-  p <- length(object$coefficients)
+  p <- length(object$coefficients) + length(object$lambda)
   -2 * object$loglik + log(object$n) * p
 }
-
 
 #' Log-likelihood profile plot for the transformation parameter
 #'
