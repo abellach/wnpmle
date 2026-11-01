@@ -106,7 +106,7 @@ vcov.wnpmle <- function(object, ...) {
 #' @export
 logLik.wnpmle <- function(object, ...) {
   val <- object$loglik
-  attr(val, "df")   <- length(object$coefficients)
+  attr(val, "df")   <- length(object$coefficients) + length(object$lambda)
   attr(val, "nobs") <- object$n
   class(val) <- "logLik"
   val
