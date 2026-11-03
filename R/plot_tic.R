@@ -55,6 +55,12 @@ plot_tic <- function(formula, data, id = "id",
                               init_beta = init_beta, ...),
                    error = function(e) NULL)
     if (is.null(fs)) return(list(res = rep(NA_real_, 5), beta = init_beta))
+    if (!is.null(fs$tic_penalty) && is.finite(fs$tic_penalty)) {
+      d <- tryCatch(suppressWarnings(TIC(fs, details = TRUE)),
+                    error = function(e) rep(NA_real_, 5))
+      return(list(res = as.numeric(d[c("loglik", "penalty", "p", "AIC", "TIC")]),
+                  beta = fs$coefficients))
+    }
     ff <- tryCatch(wnpmle_fit(formula, data = data, id = id, model = model,
                               rho = p_val, tau = tau, se = "fisher",
                               init_beta = fs$coefficients, ...),

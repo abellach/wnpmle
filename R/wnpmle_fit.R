@@ -307,6 +307,7 @@ wnpmle_fit <- function(formula,
 
   # ---- 9. Variance estimation ----
   vcov_mat <- NULL
+  tic_pen <- NA_real_
   se_beta  <- rep(NA_real_, numcov)
   se_Lambda <- rep(NA_real_, num1)
 
@@ -348,6 +349,7 @@ wnpmle_fit <- function(formula,
       }
 
       meat     <- crossprod(gradi_eff)    # sum over subjects of gradi_i gradi_i^T
+      tic_pen <- sum(breadi * meat)
       sandw    <- Mtrafo %*% breadi %*% meat %*% t(breadi) %*% t(Mtrafo)
       vcov_mat <- sandw
     }
@@ -368,6 +370,7 @@ wnpmle_fit <- function(formula,
       event_times  = M1$time,
       loglik       = loglik,
       vcov         = vcov_mat,
+      tic_penalty = tic_pen,
       model        = model,
       type         = type,
       rho          = rho,

@@ -74,6 +74,20 @@ TIC.wnpmle <- function(object, fisher = NULL, details = FALSE, ...) {
   if (!se_used %in% c("sandwich_adj", "sandwich"))
     stop("'object' must be fitted with se = \"sandwich_adj\" or \"sandwich\".")
 
+  # fast path: penalty stored by wnpmle_fit() (same value as the trace below)
+  if (is.null(fisher) && !is.null(object$tic_penalty) && is.finite(object$tic_penalty)) {
+    penalty <- object$tic_penalty
+    p   <- nrow(object$vcov)
+    tic <- -2 * object$loglik + 2 * penalty
+    if (penalty > 1.2 * p)
+      warning(sprintf("TIC penalty (%.1f) clearly exceeds p (%d); check the variance estimate.",
+                      penalty, p))
+    if (details)
+      return(c(TIC = tic, penalty = penalty, p = p,
+               AIC = -2 * object$loglik + 2 * p, loglik = object$loglik))
+    return(tic)
+  }
+
   if (is.null(fisher)) {
     cl <- object$call
     cl$se <- "fisher"
