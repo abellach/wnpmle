@@ -121,6 +121,7 @@
 
   # ---- 3. Variance: (beta, lambda) -> (beta, Lambda) ----
   vcov_mat  <- NULL
+  tic_pen   <- NA_real_
   se_beta   <- rep(NA_real_, numcov)
   se_Lambda <- rep(NA_real_, num1)
   if (se != "none") {
@@ -160,7 +161,11 @@
                                 DLL = "wnpmle", silent = silent)
         gradi <- gradi - cobj$report(c(beta_hat, log(lambda_hat)))$psi
       }
-      vcov_mat <- Mtrafo %*% breadi %*% crossprod(gradi) %*% breadi %*% t(Mtrafo)
+      meat     <- crossprod(gradi)        # sum over subjects of gradi_i gradi_i^T
+      # TIC penalty tr(I^-1 Sigma) = tr(breadi %*% meat) (breadi is symmetric);
+      # stored so that TIC() and plot_tic() need no second fit with se = "fisher"
+      tic_pen  <- sum(breadi * meat)
+      vcov_mat <- Mtrafo %*% breadi %*% meat %*% breadi %*% t(Mtrafo)
     }
     se_all    <- sqrt(pmax(diag(vcov_mat), 0))
     se_beta   <- se_all[seq_len(numcov)]
@@ -178,6 +183,7 @@
       event_times  = time1,
       loglik       = loglik,
       vcov         = vcov_mat,
+      tic_penalty  = tic_pen,
       model        = model,
       type         = "cmprsk",
       se_type      = se,
